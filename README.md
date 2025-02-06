@@ -1,2 +1,2 @@
 # iothink
-Projet Individuel Innovant autoir de la sécurisation de capteurs IoT
+Projet Individuel Innovant autour de la sécurisation de capteurs IoT
