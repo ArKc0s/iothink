@@ -1,2 +1,2 @@
-# iothink-docs
-Documentations techniques du projet IoThink
+# iothink
+Projet Individuel Innovant autoir de la sécurisation de capteurs IoT
