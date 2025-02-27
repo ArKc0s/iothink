@@ -2,3 +2,4 @@
 *.env
 
 /mosquitto/config/certs/
+/mosquitto/config/passwordfile
