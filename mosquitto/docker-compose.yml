@@ -7,9 +7,9 @@ services:
       - "1883:1883" #default mqtt port
       - "8883:8883"   # port MQTT sécurisé par SSL/TLS
     volumes:
-      - ./mosquitto/config:/mosquitto/config
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
+      - ./config:/mosquitto/config
+      - ./data:/mosquitto/data
+      - ./log:/mosquitto/log
     restart: unless-stopped
 
 networks:
