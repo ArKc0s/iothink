@@ -27,6 +27,7 @@ services:
     restart: always
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./ca.crt:/etc/telegraf/ca.crt:ro
     depends_on:
       - influxdb
     networks:
