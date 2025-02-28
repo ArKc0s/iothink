@@ -3,3 +3,7 @@
 
 /mosquitto/config/certs/
 /mosquitto/config/passwordfile
+/mosquitto/data/
+/mosquitto/log/
+
+/telegraf/ca.crt 
