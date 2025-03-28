@@ -6,7 +6,7 @@ const deviceRoutes = require('./routes/device');
 const app = express();
 const port = process.env.PORT || 3000;
 
-mongoose.connect('mongodb://localhost:27017/iothink', {
+mongoose.connect('mongodb://mongo:27017/iothink', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
