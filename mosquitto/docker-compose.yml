@@ -1,15 +1,14 @@
 services:
   # mqtt5 eclipse-mosquitto
   mqtt5:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: iegomez/mosquitto-go-auth
     container_name: mqtt
     ports:
       - "1883:1883" #default mqtt port
       - "8883:8883"   # port MQTT sécurisé par SSL/TLS
     volumes:
-      - ./config:/mosquitto/config
+      - ./config/mosquitto.conf:/etc/mosquitto/mosquitto.conf
+      - ./config/go-auth.conf:/etc/mosquitto/go-auth.conf
       - ./data:/mosquitto/data
       - ./log:/mosquitto/log
     restart: unless-stopped
