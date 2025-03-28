@@ -1,11 +1,17 @@
 const express = require('express');
 const morgan = require('morgan');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Middleware de log
 app.use(morgan('dev'));
-app.use(express.urlencoded({ extended: true }));
 
+// ⚠️ Ajoute bien les deux lignes ci-dessous
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// Routes
 app.post('/mqtt/auth', (req, res) => {
   console.log('[AUTH]', req.body);
   res.send('OK');
@@ -22,5 +28,5 @@ app.post('/mqtt/acl', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`🚀 MQTT HTTP backend listening on port ${port}`);
+  console.log(`🚀 MQTT AUTH backend listening on port ${port}`);
 });
