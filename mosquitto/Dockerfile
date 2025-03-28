@@ -1,4 +1,4 @@
-FROM eclipse-mosquitto:2.0
+FROM eclipse-mosquitto:1.6.12
 
 # Installer les dépendances nécessaires
 RUN apk add --no-cache \
