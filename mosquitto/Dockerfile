@@ -1,8 +1,14 @@
 FROM eclipse-mosquitto:2.0
 
 # Installer les dépendances nécessaires
-RUN apt-get update && apt-get install -y \
-    git build-essential cmake libssl-dev libc-ares-dev libcurl4-openssl-dev uuid-dev
+RUN apk add --no-cache \
+    git \
+    build-base \
+    cmake \
+    openssl-dev \
+    c-ares-dev \
+    curl-dev \
+    util-linux-dev
 
 # Télécharger mosquitto-auth-plug
 WORKDIR /build
