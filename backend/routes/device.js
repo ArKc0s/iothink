@@ -68,4 +68,33 @@ try {
     return res.status(500).json({ error: 'Server error' })
 }
 })
+
+router.patch('/:device_id/authorize', async (req, res) => {
+    const { device_id } = req.params
+
+    try {
+        const device = await Device.findOne({ device_id })
+
+        if (!device) {
+        return res.status(404).json({ error: 'Device not found' })
+        }
+
+        if (device.authorized) {
+        return res.status(200).json({ message: 'Device already authorized' })
+        }
+
+        device.authorized = true
+        device.api_key = crypto.randomUUID()
+        await device.save()
+
+        return res.status(200).json({
+        message: 'Device authorized',
+        device_id: device.device_id,
+        api_key: device.api_key
+        })
+    } catch (err) {
+        console.error(err)
+        return res.status(500).json({ error: 'Server error' })
+    }
+})
 module.exports = router
