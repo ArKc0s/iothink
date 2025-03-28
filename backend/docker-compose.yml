@@ -1,9 +1,31 @@
-version: '3.8'
-
 services:
-  mqtt-auth-backend:
-    container_name: mqtt-auth-backend
+  backend:
+    container_name: express-backend
     build: .
     ports:
       - "3000:3000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/iothink
+    networks:
+      - iot-network
     restart: unless-stopped
+
+  mongo:
+    image: mongo:6
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - iot-network
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+
+networks:
+  iot-network:
+    driver: bridge

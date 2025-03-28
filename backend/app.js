@@ -4,12 +4,18 @@ const morgan = require('morgan');
 const app = express();
 const port = process.env.PORT || 3000;
 
+mongoose.connect('mongodb://localhost:27017/iothink', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+
 // Middleware de log
 app.use(morgan('dev'));
 
 // ⚠️ Ajoute bien les deux lignes ci-dessous
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use('/devices', deviceRoutes)
 
 // Routes
 app.post('/mqtt/auth', (req, res) => {
@@ -17,7 +23,7 @@ app.post('/mqtt/auth', (req, res) => {
   res.send('OK');
 });
 
-app.post('/mqtt/superuser', (req, res) => {
+app.post('/mqtt/superuser', (req, res) => { 
   console.log('[SUPERUSER]', req.body);
   res.send('ERROR');
 });
