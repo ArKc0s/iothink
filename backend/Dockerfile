@@ -5,13 +5,13 @@ FROM node:18
 WORKDIR /app
 
 # Étape 3 : copie des fichiers package.json et package-lock.json
-COPY package*.json ./
+COPY package.json /app
 
 # Étape 4 : installation des dépendances
 RUN npm install
 
 # Étape 5 : copie du reste du code
-COPY . .
+COPY . ./app
 
 # Étape 6 : exposer le port de l'app
 EXPOSE 3000
