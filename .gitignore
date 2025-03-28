@@ -1,9 +1,10 @@
 # Ignore environment files
 *.env
 
-/mosquitto/config/certs/
 /mosquitto/config/passwordfile
 /mosquitto/data/
 /mosquitto/log/
+/mosquitto/certs/
+
 
 /telegraf/ca.crt 
