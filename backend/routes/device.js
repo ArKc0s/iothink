@@ -1,6 +1,6 @@
-import express from 'express'
-import Device from '../models/Device.js'
-import crypto from 'crypto'
+const express = require('express')
+const crypto = require('crypto')
+const Device = require('../models/Device')
 
 const router = express.Router()
 
