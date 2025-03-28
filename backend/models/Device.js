@@ -11,4 +11,4 @@ const DeviceSchema = new mongoose.Schema({
   authorized: { type: Boolean, default: false }
 })
 
-export default mongoose.model('Device', DeviceSchema)
+module.exports = mongoose.model('Device', DeviceSchema)
