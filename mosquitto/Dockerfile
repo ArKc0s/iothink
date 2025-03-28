@@ -8,7 +8,8 @@ RUN apk add --no-cache \
     openssl-dev \
     c-ares-dev \
     curl-dev \
-    util-linux-dev
+    util-linux-dev \
+    mosquitto-dev
 
 # Télécharger mosquitto-auth-plug
 WORKDIR /build
