@@ -1,7 +1,9 @@
 services:
   # mqtt5 eclipse-mosquitto
   mqtt5:
-    image: eclipse-mosquitto
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: mqtt
     ports:
       - "1883:1883" #default mqtt port
