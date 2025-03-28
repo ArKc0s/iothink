@@ -11,6 +11,7 @@ services:
       - ./config/conf.d:/etc/mosquitto/conf.d
       - ./data:/mosquitto/data
       - ./log:/mosquitto/log
+      - ./certs:/mosquitto/config/certs
     restart: unless-stopped
 
 networks:
