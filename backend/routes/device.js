@@ -73,6 +73,8 @@ router.post('/register', async (req, res) => {
  *     summary: Récupère les credentials MQTT d’un appareil autorisé
  *     tags:
  *       - Devices
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: device_id
  *         in: path
@@ -180,6 +182,8 @@ router.patch('/:device_id/authorize', async (req, res) => {
  *     summary: Renouvelle un token JWT pour un device autorisé
  *     tags:
  *       - Devices
+ *     security:
+ *      - bearerAuth: []
  *     parameters:
  *       - name: device_id
  *         in: path
