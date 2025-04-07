@@ -2,6 +2,7 @@ services:
   backend:
     container_name: express-backend
     build: .
+    command: sh -c "node init/seed.js && npm start"
     ports:
       - "3000:3000"
     depends_on:
