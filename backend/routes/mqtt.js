@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const Device = require('../models/Device')
 
 const router = express.Router()
+const bodyParser = require('body-parser')
 
 const isTelegraf = (username, password) => {
   return (
@@ -14,7 +15,7 @@ const isTelegraf = (username, password) => {
 // ---------------------
 // AUTH
 // ---------------------
-router.post('/auth', async (req, res) => {
+router.post('/auth', bodyParser.json(), async (req, res) => {
   const { username, password } = req.body
 
   if (!username || !password) return res.status(403).json({ Ok: false, Error: "ERROR" });
@@ -42,7 +43,7 @@ router.post('/auth', async (req, res) => {
 // ---------------------
 // SUPERUSER
 // ---------------------
-router.post('/superuser', (req, res) => {
+router.post('/superuser', bodyParser.json(), (req, res) => {
   const { username } = req.body
 
   if (username === 'telegraf') return res.status(200).json({ Ok: true, Error: "" })
@@ -53,7 +54,7 @@ router.post('/superuser', (req, res) => {
 // ---------------------
 // ACL
 // ---------------------
-router.post('/acl', async (req, res) => {
+router.post('/acl', bodyParser.json(), async (req, res) => {
   const { username, topic } = req.body
 
   if (!username || !topic) return res.status(403).json({ Ok: false, Error: "ERROR" });

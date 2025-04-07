@@ -25,8 +25,8 @@ app.use(morgan('dev'));
 
 // ⚠️ Ajoute bien les deux lignes ci-dessous
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use('/devices', deviceRoutes);
+
+app.use('/devices', express.json(), deviceRoutes);
 app.use('/mqtt', mqttRoutes);
 
 https.createServer(options, app).listen(port, () => {
