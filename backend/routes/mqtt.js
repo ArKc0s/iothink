@@ -112,11 +112,11 @@ router.post('/jwt/superuser', (req, res) => {
 // ---------------------
 // JWT: ACL
 // ---------------------
-router.post('/jwt/acl', (req, res) => {
+router.post('/jwt/acl', bodyParser.json(), (req, res) => {
   const token = extractToken(req)
   const { topic, acc, clientid } = req.body
 
-  if (!token) return res.status(401).json({ Ok: false, Error: 'Missing token' })
+  if (!token || !topic) return res.status(401).json({ Ok: false, Error: 'Missing data' })
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
