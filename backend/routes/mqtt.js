@@ -17,25 +17,25 @@ const isTelegraf = (username, password) => {
 router.post('/auth', async (req, res) => {
   const { username, password } = req.body
 
-  if (!username || !password) return res.status(403).send('ERROR')
+  if (!username || !password) return res.status(403).json({ Ok: false, Error: "ERROR" });
 
-  if (isTelegraf(username, password)) return res.send('OK')
+  if (isTelegraf(username, password)) return res.status(200).json({ Ok: true, Error: "" })
 
   try {
     const device = await Device.findOne({ device_id: username })
 
     if (!device || !device.authorized || device.api_key !== password) {
-      return res.status(403).send('ERROR')
+      return res.status(403).json({ Ok: false, Error: "ERROR" });
     }
 
     device.last_seen = new Date()
     device.status = 'active'
     await device.save()
 
-    return res.send('OK')
+    return res.status(200).json({ Ok: true, Error: "" });
   } catch (err) {
     console.error('[AUTH ERROR]', err)
-    return res.status(403).send('ERROR')
+    return res.status(403).json({ Ok: false, Error: "ERROR" });
   }
 })
 
@@ -45,9 +45,9 @@ router.post('/auth', async (req, res) => {
 router.post('/superuser', (req, res) => {
   const { username } = req.body
 
-  if (username === 'telegraf') return res.send('OK')
+  if (username === 'telegraf') return res.status(200).json({ Ok: true, Error: "" })
 
-  return res.status(403).send('ERROR')
+  return res.status(403).json({ Ok: false, Error: "ERROR" });
 })
 
 // ---------------------
@@ -56,12 +56,12 @@ router.post('/superuser', (req, res) => {
 router.post('/acl', async (req, res) => {
   const { username, topic } = req.body
 
-  if (!username || !topic) return res.status(403).send('ERROR')
+  if (!username || !topic) return res.status(403).json({ Ok: false, Error: "ERROR" });
 
-  if (username === 'telegraf') return res.send('OK')
+  if (username === 'telegraf') return res.status(200).json({ Ok: true, Error: "" })
 
   const expectedTopic = `pico/${username}`
-  return topic === expectedTopic ? res.send('OK') : res.send('ERROR')
+  return topic === expectedTopic ? res.status(200).json({ Ok: true, Error: "" }) : res.status(403).json({ Ok: false, Error: "ERROR" });
 })
 
 // ---------------------
