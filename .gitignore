@@ -9,4 +9,11 @@
 
 /telegraf/ca.crt 
 
-/backend/certs/
+# Clés privées
+certs/*.key
+
+# Série de certificat
+certs/*.srl
+
+# Optionnel : demandes de certificat
+certs/*.csr

@@ -10,6 +10,8 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/iothink
       - TELEGRAPH_API_KEY=${TELEGRAPH_API_KEY}
+    volumes:
+      - ./certs:/certs:ro
     networks:
       - iot-network
     restart: unless-stopped
