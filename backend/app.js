@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const deviceRoutes = require('./routes/device');
 const mqttRoutes = require('./routes/mqtt');
 const setupSwagger = require('./swagger');
-const updateInactiveDevices = require('./utils/deviceMaintenance');
+const {updateInactiveDevices} = require('./utils/deviceMaintenance');
 
 const app = express();
 const port = 3000;
