@@ -32,6 +32,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/devices', express.json(), deviceRoutes);
 app.use('/mqtt', mqttRoutes);
 
+// Vérifie toutes les minutes
+setInterval(() => {
+  updateInactiveDevices(5); // Inactif après 5 min sans contact
+}, 60 * 1000);
+
 https.createServer(options, app).listen(port, () => {
   console.log(`✅ Secure backend running at https://localhost:${port}`);
 });

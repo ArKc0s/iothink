@@ -6,6 +6,15 @@ const authenticate = require('../middleware/auth')
 
 const router = express.Router()
 
+async function updateInactiveDevices(thresholdMinutes = 5) {
+  const threshold = new Date(Date.now() - thresholdMinutes * 60 * 1000);
+
+  await Device.updateMany(
+    { last_seen: { $lt: threshold }, status: 'active' },
+    { $set: { status: 'inactive' } }
+  );
+}
+
 /**
  * @swagger
  * /devices/register:
@@ -222,4 +231,44 @@ router.get('/:device_id/token', authenticate, async (req, res) => {
     return res.status(500).json({ error: 'Server error' })
   }
 })
+
+/**
+ * @swagger
+ * /devices/{device_id}/status:
+ *   get:
+ *     summary: Retourne le statut actuel et la dernière connexion d’un device
+ *     tags:
+ *       - Devices
+ *     parameters:
+ *       - name: device_id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Informations du device
+ *       404:
+ *         description: Appareil introuvable
+ */
+router.get('/:device_id/status', async (req, res) => {
+  const { device_id } = req.params;
+
+  try {
+    const device = await Device.findOne({ device_id });
+
+    if (!device) {
+      return res.status(404).json({ error: 'Device not found' });
+    }
+
+    return res.json({
+      device_id: device.device_id,
+      status: device.status,
+      last_seen: device.last_seen,
+    });
+  } catch (err) {
+    console.error('[STATUS ERROR]', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
 module.exports = router

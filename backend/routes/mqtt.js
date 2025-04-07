@@ -220,11 +220,13 @@ router.post('/jwt/superuser', (req, res) => {
  *       403:
  *         description: Accès refusé
  */
-router.post('/jwt/acl', bodyParser.json(), (req, res) => {
+router.post('/jwt/acl', bodyParser.json(), async (req, res) => {
   const token = extractToken(req)
   const { topic } = req.body
 
-  if (!token || !topic) return res.status(401).json({ Ok: false, Error: 'Missing data' })
+  if (!token || !topic) {
+    return res.status(401).json({ Ok: false, Error: 'Missing data' })
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -236,6 +238,14 @@ router.post('/jwt/acl', bodyParser.json(), (req, res) => {
     const expectedTopic = `pico/${decoded.sub}`
 
     if (topic === expectedTopic) {
+      // Met à jour l'activité du device
+      const device = await Device.findOne({ device_id: decoded.sub })
+      if (device) {
+        device.last_seen = new Date()
+        device.status = 'active'
+        await device.save()
+      }
+
       return res.status(200).json({ Ok: true, Error: '' })
     }
 
