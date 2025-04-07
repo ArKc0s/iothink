@@ -8,8 +8,17 @@ const options = {
       title: 'IoThink API',
       version: '1.0.0',
       description: 'Documentation de l’API du backend Express'
-    }
+    },
   },
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT'
+      }
+    }
+  },  
   apis: ['./routes/*.js'], // fichiers avec les annotations Swagger
 };
 

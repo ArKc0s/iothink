@@ -2,6 +2,7 @@ const express = require('express')
 const crypto = require('crypto')
 const Device = require('../models/Device')
 const jwt = require('jsonwebtoken')
+const authenticate = require('../middlewares/authenticate')
 
 const router = express.Router()
 
@@ -87,20 +88,24 @@ router.post('/register', async (req, res) => {
  *       404:
  *         description: Appareil introuvable
  */
-router.get('/:device_id/credentials', async (req, res) => {
+router.get('/:device_id/credentials', authenticate, async (req, res) => {
   const { device_id } = req.params
+
+  if (req.auth.sub !== device_id || req.auth.type !== 'device') {
+    return res.status(403).json({ error: 'Token mismatch or invalid type' })
+  }
 
   try {
     const device = await Device.findOne({ device_id })
-    if (!device) {
-      return res.status(404).json({ error: 'Device not found' })
+    if (!device || !device.authorized || !device.api_key) {
+      return res.status(403).json({ authorized: false })
     }
 
-    if (!device.authorized || !device.api_key) {
-      return res.status(202).json({ authorized: false })
-    }
-
-    const token = jwt.sign({ sub: device.device_id }, process.env.JWT_SECRET, { expiresIn: '1h' })
+    const token = jwt.sign(
+      { sub: device.device_id, type: 'device' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    )
 
     return res.status(200).json({
       authorized: true,
@@ -115,6 +120,8 @@ router.get('/:device_id/credentials', async (req, res) => {
     return res.status(500).json({ error: 'Server error' })
   }
 })
+
+
 
 /**
  * @swagger
@@ -185,8 +192,12 @@ router.patch('/:device_id/authorize', async (req, res) => {
  *       403:
  *         description: Appareil non autorisé
  */
-router.get('/:device_id/token', async (req, res) => {
+router.get('/:device_id/token', authenticate, async (req, res) => {
   const { device_id } = req.params
+
+  if (req.auth.sub !== device_id || req.auth.type !== 'device') {
+    return res.status(403).json({ error: 'Token mismatch or invalid type' })
+  }
 
   try {
     const device = await Device.findOne({ device_id })
@@ -195,7 +206,11 @@ router.get('/:device_id/token', async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' })
     }
 
-    const token = jwt.sign({ sub: device.device_id }, process.env.JWT_SECRET, { expiresIn: '1h' })
+    const token = jwt.sign(
+      { sub: device.device_id, type: 'device' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    )
 
     return res.json({ jwt: token })
   } catch (err) {
@@ -203,5 +218,4 @@ router.get('/:device_id/token', async (req, res) => {
     return res.status(500).json({ error: 'Server error' })
   }
 })
-
 module.exports = router

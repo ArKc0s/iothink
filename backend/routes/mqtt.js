@@ -139,6 +139,11 @@ router.post('/jwt/auth', async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+    if (decoded.type !== 'device') {
+      return res.status(403).json({ Ok: false, Error: 'Invalid token type' })
+    }
+
     const device = await Device.findOne({ device_id: decoded.sub })
     if (!device || !device.authorized) {
       return res.status(403).json({ Ok: false, Error: 'Unauthorized device' })
@@ -154,6 +159,7 @@ router.post('/jwt/auth', async (req, res) => {
     return res.status(403).json({ Ok: false, Error: 'Invalid token' })
   }
 })
+
 
 /**
  * @swagger
@@ -175,7 +181,12 @@ router.post('/jwt/superuser', (req, res) => {
   if (!token) return res.status(401).json({ Ok: false, Error: 'Missing token' })
 
   try {
-    jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+    if (decoded.type !== 'device') {
+      return res.status(403).json({ Ok: false, Error: 'Invalid token type' })
+    }
+
     return res.status(200).json({ Ok: false, Error: '' }) // No superusers
   } catch (err) {
     return res.status(403).json({ Ok: false, Error: 'Invalid token' })
@@ -217,6 +228,11 @@ router.post('/jwt/acl', bodyParser.json(), (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+    if (decoded.type !== 'device') {
+      return res.status(403).json({ Ok: false, Error: 'Invalid token type' })
+    }
+
     const expectedTopic = `pico/${decoded.sub}`
 
     if (topic === expectedTopic) {
