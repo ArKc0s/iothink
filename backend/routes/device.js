@@ -5,62 +5,103 @@ const jwt = require('jsonwebtoken')
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * /devices/register:
+ *   post:
+ *     summary: Enregistre un nouvel appareil
+ *     tags:
+ *       - Devices
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - device_id
+ *               - mac
+ *             properties:
+ *               device_id:
+ *                 type: string
+ *               mac:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Appareil déjà enregistré
+ *       202:
+ *         description: Enregistrement en attente d’autorisation
+ */
 router.post('/register', async (req, res) => {
-    const { device_id, mac } = req.body
-  
-    if (!device_id || !mac) {
-      return res.status(400).json({ error: 'device_id and mac are required' })
-    }
-  
-    try {
-      const existing = await Device.findOne({ device_id })
-  
-      if (existing) {
-        return res.status(200).json({ status: existing.authorized ? 'approved' : 'pending' })
-      }
-  
-      const newDevice = new Device({
-        device_id,
-        mac,
-        authorized: false,
-        api_key: null,
-        created_at: new Date(),
-        status: 'inactive'
-      })
-  
-      await newDevice.save()
-  
-      return res.status(202).json({
-        status: 'pending',
-        message: 'Device registered and pending approval'
-      })
-  
-    } catch (err) {
-      console.error(err)
-      return res.status(500).json({ error: 'Server error' })
-    }
-  })
+  const { device_id, mac } = req.body
+  if (!device_id || !mac) {
+    return res.status(400).json({ error: 'device_id and mac are required' })
+  }
 
+  try {
+    const existing = await Device.findOne({ device_id })
+    if (existing) {
+      return res.status(200).json({ status: existing.authorized ? 'approved' : 'pending' })
+    }
+
+    const newDevice = new Device({
+      device_id,
+      mac,
+      authorized: false,
+      api_key: null,
+      created_at: new Date(),
+      status: 'inactive'
+    })
+
+    await newDevice.save()
+
+    return res.status(202).json({
+      status: 'pending',
+      message: 'Device registered and pending approval'
+    })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
+
+/**
+ * @swagger
+ * /devices/{device_id}/credentials:
+ *   get:
+ *     summary: Récupère les credentials MQTT d’un appareil autorisé
+ *     tags:
+ *       - Devices
+ *     parameters:
+ *       - name: device_id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'appareil
+ *     responses:
+ *       200:
+ *         description: Credentials JWT renvoyés
+ *       202:
+ *         description: Appareil non encore autorisé
+ *       404:
+ *         description: Appareil introuvable
+ */
 router.get('/:device_id/credentials', async (req, res) => {
-const { device_id } = req.params
+  const { device_id } = req.params
 
-try {
+  try {
     const device = await Device.findOne({ device_id })
-
     if (!device) {
-    return res.status(404).json({ error: 'Device not found' })
+      return res.status(404).json({ error: 'Device not found' })
     }
 
     if (!device.authorized || !device.api_key) {
-      return res.status(202).json({ authorized: false });
+      return res.status(202).json({ authorized: false })
     }
-    
-    const token = jwt.sign(
-      { sub: device.device_id },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    )
-    
+
+    const token = jwt.sign({ sub: device.device_id }, process.env.JWT_SECRET, { expiresIn: '1h' })
+
     return res.status(200).json({
       authorized: true,
       device_id: device.device_id,
@@ -68,14 +109,32 @@ try {
       mqtt_host: 'mqtt.iot.euklyde.fr',
       mqtt_port: 8883,
       topic: `pico/${device.device_id}`
-    });
-
-} catch (err) {
+    })
+  } catch (err) {
     console.error(err)
     return res.status(500).json({ error: 'Server error' })
-}
+  }
 })
 
+/**
+ * @swagger
+ * /devices/{device_id}/authorize:
+ *   patch:
+ *     summary: Autorise un appareil à publier
+ *     tags:
+ *       - Devices
+ *     parameters:
+ *       - name: device_id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Appareil autorisé
+ *       404:
+ *         description: Appareil introuvable
+ */
 router.patch('/:device_id/authorize', async (req, res) => {
   const { device_id } = req.params
 
@@ -107,6 +166,25 @@ router.patch('/:device_id/authorize', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /devices/{device_id}/token:
+ *   get:
+ *     summary: Renouvelle un token JWT pour un device autorisé
+ *     tags:
+ *       - Devices
+ *     parameters:
+ *       - name: device_id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: JWT renvoyé
+ *       403:
+ *         description: Appareil non autorisé
+ */
 router.get('/:device_id/token', async (req, res) => {
   const { device_id } = req.params
 
@@ -117,11 +195,7 @@ router.get('/:device_id/token', async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' })
     }
 
-    const token = jwt.sign(
-      { sub: device.device_id },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    )
+    const token = jwt.sign({ sub: device.device_id }, process.env.JWT_SECRET, { expiresIn: '1h' })
 
     return res.json({ jwt: token })
   } catch (err) {
@@ -129,4 +203,5 @@ router.get('/:device_id/token', async (req, res) => {
     return res.status(500).json({ error: 'Server error' })
   }
 })
+
 module.exports = router

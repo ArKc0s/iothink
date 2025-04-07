@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const deviceRoutes = require('./routes/device');
 const mqttRoutes = require('./routes/mqtt');
+const setupSwagger = require('./swagger');
 
 const app = express();
 const port = 3000;
@@ -14,6 +15,8 @@ const options = {
   key: fs.readFileSync('/certs/backend.key'),
   cert: fs.readFileSync('/certs/backend.crt')
 };
+
+setupSwagger(app);
 
 mongoose.connect('mongodb://mongo:27017/iothink', {
   useNewUrlParser: true,
