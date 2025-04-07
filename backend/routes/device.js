@@ -6,15 +6,6 @@ const authenticate = require('../middleware/auth')
 
 const router = express.Router()
 
-async function updateInactiveDevices(thresholdMinutes = 5) {
-  const threshold = new Date(Date.now() - thresholdMinutes * 60 * 1000);
-
-  await Device.updateMany(
-    { last_seen: { $lt: threshold }, status: 'active' },
-    { $set: { status: 'inactive' } }
-  );
-}
-
 /**
  * @swagger
  * /devices/register:
@@ -271,7 +262,4 @@ router.get('/:device_id/status', async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 });
-module.exports = {
-  router,
-  updateInactiveDevices
-}
+module.exports = router
