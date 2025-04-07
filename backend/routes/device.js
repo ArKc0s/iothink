@@ -2,7 +2,7 @@ const express = require('express')
 const crypto = require('crypto')
 const Device = require('../models/Device')
 const jwt = require('jsonwebtoken')
-const authenticate = require('../middleware/authenticate')
+const authenticate = require('../middleware/auth')
 
 const router = express.Router()
 
