@@ -9,21 +9,21 @@ const options = {
       version: '1.0.0',
       description: 'Documentation de l’API du backend Express'
     },
-  },
-  components: {
-    securitySchemes: {
-      bearerAuth: {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT'
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
       }
-    }
-  }, 
-  security: [
-    {
-      bearerAuth: []
-    }
-  ], 
+    }, 
+    security: [
+      {
+        bearerAuth: []
+      }
+    ], 
+  },
   apis: ['./routes/*.js'], // fichiers avec les annotations Swagger
 };
 
