@@ -18,7 +18,12 @@ const options = {
         bearerFormat: 'JWT'
       }
     }
-  },  
+  }, 
+  security: [
+    {
+      bearerAuth: []
+    }
+  ], 
   apis: ['./routes/*.js'], // fichiers avec les annotations Swagger
 };
 
