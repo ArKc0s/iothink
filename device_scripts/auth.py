@@ -41,7 +41,12 @@ def wait_for_authorization():
     print("Attente de l'autorisation...")
     while True:
         try:
-            res = requests.get(f"{config.backend_url}/devices/{DEVICE_ID}/credentials")
+            mac = get_mac()
+            payload = {
+                "device_id": DEVICE_ID,
+                "mac": mac
+            }
+            res = requests.post(f"{config.backend_url}/devices/credentials", json=payload)
             data = res.json()
             if data.get("authorized") and "jwt" in data:
                 print("Appareil autorisé.")
@@ -54,6 +59,7 @@ def wait_for_authorization():
             print("Erreur auth check :", e)
         gc.collect()
         time.sleep(10)
+
 
 def save_credentials(data):
     with open(CRED_FILE, "w") as f:
