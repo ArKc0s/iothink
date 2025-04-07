@@ -271,4 +271,7 @@ router.get('/:device_id/status', async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 });
-module.exports = router
+module.exports = {
+  router,
+  updateInactiveDevices
+}
