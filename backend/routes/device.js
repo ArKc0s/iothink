@@ -68,46 +68,56 @@ router.post('/register', async (req, res) => {
 
 /**
  * @swagger
- * /devices/{device_id}/credentials:
- *   get:
- *     summary: Récupère les credentials MQTT d’un appareil autorisé
+ * /devices/credentials:
+ *   post:
+ *     summary: Récupère un JWT si le couple device_id + mac est valide
  *     tags:
  *       - Devices
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: device_id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de l'appareil
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - device_id
+ *               - mac
+ *             properties:
+ *               device_id:
+ *                 type: string
+ *               mac:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Credentials JWT renvoyés
- *       202:
- *         description: Appareil non encore autorisé
+ *       403:
+ *         description: Appareil non autorisé ou données invalides
  *       404:
- *         description: Appareil introuvable
+ *         description: Appareil non trouvé
  */
-router.get('/:device_id/credentials', authenticate, async (req, res) => {
-  const { device_id } = req.params
+router.post('/credentials', async (req, res) => {
+  const { device_id, mac } = req.body;
 
-  if (req.auth.sub !== device_id || req.auth.type !== 'device') {
-    return res.status(403).json({ error: 'Token mismatch or invalid type' })
+  if (!device_id || !mac) {
+    return res.status(400).json({ error: 'device_id and mac are required' });
   }
 
   try {
-    const device = await Device.findOne({ device_id })
-    if (!device || !device.authorized || !device.api_key) {
-      return res.status(403).json({ authorized: false })
+    const device = await Device.findOne({ device_id });
+
+    if (!device) {
+      return res.status(404).json({ error: 'Device not found' });
+    }
+
+    if (!device.authorized || device.mac !== mac) {
+      return res.status(403).json({ authorized: false });
     }
 
     const token = jwt.sign(
       { sub: device.device_id, type: 'device' },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
-    )
+    );
 
     return res.status(200).json({
       authorized: true,
@@ -116,14 +126,12 @@ router.get('/:device_id/credentials', authenticate, async (req, res) => {
       mqtt_host: 'mqtt.iot.euklyde.fr',
       mqtt_port: 8883,
       topic: `pico/${device.device_id}`
-    })
+    });
   } catch (err) {
-    console.error(err)
-    return res.status(500).json({ error: 'Server error' })
+    console.error('[CREDENTIALS ERROR]', err);
+    return res.status(500).json({ error: 'Server error' });
   }
-})
-
-
+});
 
 /**
  * @swagger
