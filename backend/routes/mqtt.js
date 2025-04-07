@@ -7,14 +7,14 @@ router.post('/auth', async (req, res) => {
   const { username, password } = req.body
 
   if (!username || !password) {
-    return res.send('ERROR')
+    return res.status(403).send('ERROR')
   }
 
   try {
     const device = await Device.findOne({ device_id: username })
 
     if (!device || !device.authorized || device.api_key !== password) {
-      return res.send('ERROR')
+        return res.status(403).send('ERROR')
     }
 
     device.last_seen = new Date()
@@ -24,19 +24,19 @@ router.post('/auth', async (req, res) => {
     return res.send('OK')
   } catch (err) {
     console.error('[AUTH ERROR]', err)
-    return res.send('ERROR')
+    return res.status(403).send('ERROR')
   }
 })
 
 router.post('/superuser', (req, res) => {
-  return res.send('ERROR')
+    return res.status(403).send('ERROR')
 })
 
 router.post('/acl', async (req, res) => {
   const { username, topic } = req.body
 
   if (!username || !topic) {
-    return res.send('ERROR')
+    return res.status(403).send('ERROR')
   }
 
   const expectedTopic = `pico/${username}`
