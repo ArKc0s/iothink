@@ -1,8 +1,18 @@
 const express = require('express')
 const crypto = require('crypto')
 const Device = require('../models/Device')
+const jwt = require('jsonwebtoken')
 
 const router = express.Router()
+
+function generateJWT(deviceId) {
+  return jwt.sign(
+    { sub: deviceId }, 
+    process.env.JWT_SECRET,
+    { expiresIn: '365d', issuer: 'iot-backend' }
+  )
+}
+
 
 router.post('/register', async (req, res) => {
     const { device_id, mac } = req.body
@@ -55,13 +65,13 @@ try {
     }
 
     return res.status(200).json({
-    authorized: true,
-    device_id: device.device_id,
-    api_key: device.api_key,
-    mqtt_host: 'mqtt.iot.euklyde.fr',
-    mqtt_port: 8883,
-    topic: `pico/${device.device_id}`
-    })
+      authorized: true,
+      device_id: device.device_id,
+      mqtt_host: 'mqtt.iot.euklyde.fr',
+      mqtt_port: 8883,
+      topic: `pico/${device.device_id}`,
+      jwt: generateJWT(device.device_id)
+    })    
 
 } catch (err) {
     console.error(err)
@@ -70,31 +80,35 @@ try {
 })
 
 router.patch('/:device_id/authorize', async (req, res) => {
-    const { device_id } = req.params
+  const { device_id } = req.params
 
-    try {
-        const device = await Device.findOne({ device_id })
+  try {
+    const device = await Device.findOne({ device_id })
 
-        if (!device) {
-        return res.status(404).json({ error: 'Device not found' })
-        }
-
-        if (device.authorized) {
-        return res.status(200).json({ message: 'Device already authorized' })
-        }
-
-        device.authorized = true
-        device.api_key = crypto.randomUUID()
-        await device.save()
-
-        return res.status(200).json({
-        message: 'Device authorized',
-        device_id: device.device_id,
-        api_key: device.api_key
-        })
-    } catch (err) {
-        console.error(err)
-        return res.status(500).json({ error: 'Server error' })
+    if (!device) {
+      return res.status(404).json({ error: 'Device not found' })
     }
+
+    if (device.authorized) {
+      return res.status(200).json({
+        message: 'Device already authorized',
+        device_id: device.device_id,
+        jwt: generateJWT(device.device_id)
+      })
+    }
+
+    device.authorized = true
+    device.api_key = crypto.randomUUID()
+    await device.save()
+
+    return res.status(200).json({
+      message: 'Device authorized',
+      device_id: device.device_id,
+      jwt: generateJWT(device.device_id)
+    })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ error: 'Server error' })
+  }
 })
 module.exports = router
