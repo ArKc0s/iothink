@@ -10,6 +10,7 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/iothink
       - TELEGRAPH_API_KEY=${TELEGRAPH_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
     volumes:
       - ./certs:/certs:ro
     networks:

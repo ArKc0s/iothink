@@ -5,15 +5,6 @@ const jwt = require('jsonwebtoken')
 
 const router = express.Router()
 
-function generateJWT(deviceId) {
-  return jwt.sign(
-    { sub: deviceId }, 
-    process.env.JWT_SECRET,
-    { expiresIn: '365d', issuer: 'iot-backend' }
-  )
-}
-
-
 router.post('/register', async (req, res) => {
     const { device_id, mac } = req.body
   
@@ -61,17 +52,23 @@ try {
     }
 
     if (!device.authorized || !device.api_key) {
-    return res.status(202).json({ authorized: false })
+      return res.status(202).json({ authorized: false });
     }
-
+    
+    const token = jwt.sign(
+      { sub: device.device_id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    )
+    
     return res.status(200).json({
       authorized: true,
       device_id: device.device_id,
+      jwt: token,
       mqtt_host: 'mqtt.iot.euklyde.fr',
       mqtt_port: 8883,
-      topic: `pico/${device.device_id}`,
-      jwt: generateJWT(device.device_id)
-    })    
+      topic: `pico/${device.device_id}`
+    });
 
 } catch (err) {
     console.error(err)
@@ -93,7 +90,6 @@ router.patch('/:device_id/authorize', async (req, res) => {
       return res.status(200).json({
         message: 'Device already authorized',
         device_id: device.device_id,
-        jwt: generateJWT(device.device_id)
       })
     }
 
@@ -104,10 +100,32 @@ router.patch('/:device_id/authorize', async (req, res) => {
     return res.status(200).json({
       message: 'Device authorized',
       device_id: device.device_id,
-      jwt: generateJWT(device.device_id)
     })
   } catch (err) {
     console.error(err)
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
+
+router.get('/:device_id/token', async (req, res) => {
+  const { device_id } = req.params
+
+  try {
+    const device = await Device.findOne({ device_id })
+
+    if (!device || !device.authorized) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
+
+    const token = jwt.sign(
+      { sub: device.device_id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    )
+
+    return res.json({ jwt: token })
+  } catch (err) {
+    console.error('[TOKEN RENEWAL ERROR]', err)
     return res.status(500).json({ error: 'Server error' })
   }
 })
