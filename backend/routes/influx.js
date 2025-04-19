@@ -1,5 +1,5 @@
 const express = require('express')
-const authenticate = require('../middlewares/auth')
+const authenticate = require('../middleware/auth')
 const { getSensorsStatus } = require('../services/influxService')
 
 const router = express.Router()
