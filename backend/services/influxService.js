@@ -52,8 +52,6 @@ async function getSensorsStatus(device_id, thresholdMinutes = 5) {
     })
 
     const lastTime = rows[0]?._time
-    console.log('Dernière date de', field, ':', lastTime, 'vs cutoff:', cutoff)
-
     if (lastTime && new Date(lastTime) > new Date(cutoff)) {
       active.push(field)
     } else {
@@ -64,4 +62,29 @@ async function getSensorsStatus(device_id, thresholdMinutes = 5) {
   return { active, inactive }
 }
 
-module.exports = { getSensorsStatus }
+async function getSensorData(device_id, sensor_name, start, stop) {
+    const query = `
+      from(bucket: "${bucket}")
+        |> range(start: ${start}, stop: ${stop})
+        |> filter(fn: (r) => r["topic"] == "pico/${device_id}")
+        |> filter(fn: (r) => r["_field"] == "${sensor_name}")
+        |> keep(columns: ["_time", "_value"])
+        |> sort(columns: ["_time"])
+    `
+  
+    const result = []
+    await new Promise((resolve, reject) => {
+      queryApi.queryRows(query, {
+        next(row, tableMeta) {
+          const o = tableMeta.toObject(row)
+          result.push({ time: o._time, value: o._value })
+        },
+        error(err) { reject(err) },
+        complete() { resolve() }
+      })
+    })
+  
+    return result
+  }
+  
+  module.exports = { getSensorsStatus, getSensorData }

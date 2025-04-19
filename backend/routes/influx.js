@@ -1,6 +1,6 @@
 const express = require('express')
 const authenticate = require('../middleware/auth')
-const { getSensorsStatus } = require('../services/influxService')
+const { getSensorsStatus, getSensorData } = require('../services/influxService')
 
 const router = express.Router()
 
@@ -19,5 +19,18 @@ router.get('/sensors/:device_id', async (req, res) => {
     return res.status(500).json({ error: 'Failed to query sensor status' })
   }
 })
+
+router.get('/data/:device_id/:sensor_name', async (req, res) => {
+    const { device_id, sensor_name } = req.params
+    const { start = '-1h', stop = 'now()' } = req.query
+  
+    try {
+      const data = await getSensorData(device_id, sensor_name, start, stop)
+      return res.json({ sensor: sensor_name, data })
+    } catch (err) {
+      console.error('[Influx Error]', err)
+      return res.status(500).json({ error: 'Failed to query sensor data' })
+    }
+  })
 
 module.exports = router
