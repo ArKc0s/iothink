@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const deviceRoutes = require('./routes/device');
 const mqttRoutes = require('./routes/mqtt');
+const influxRoutes = require('./routes/influx');
 const setupSwagger = require('./swagger');
 const {updateInactiveDevices} = require('./utils/deviceMaintenance');
 
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/devices', express.json(), deviceRoutes);
 app.use('/mqtt', mqttRoutes);
+app.use('/influx', express.json(), influxRoutes);
 
 // Vérifie toutes les minutes
 setInterval(() => {
