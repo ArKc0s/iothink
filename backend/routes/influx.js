@@ -4,12 +4,12 @@ const { getSensorsStatus } = require('../services/influxService')
 
 const router = express.Router()
 
-router.get('/sensors/:device_id', authenticate, async (req, res) => {
+router.get('/sensors/:device_id', async (req, res) => {
   const { device_id } = req.params
 
-  if (req.auth.sub !== device_id || req.auth.type !== 'device') {
+  /*if (req.auth.sub !== device_id || req.auth.type !== 'device') {
     return res.status(403).json({ error: 'Token mismatch or invalid type' })
-  }
+  }*/
 
   try {
     const result = await getSensorsStatus(device_id)
