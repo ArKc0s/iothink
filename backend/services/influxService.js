@@ -51,7 +51,7 @@ async function getSensorsStatus(device_id, thresholdMinutes = 5) {
     })
 
     const lastTime = rows[0]?._time
-    console.log('Dernière date de', sensorName, ':', lastTime, 'vs cutoff:', cutoff)
+    console.log('Dernière date de', field, ':', lastTime, 'vs cutoff:', cutoff)
 
     if (lastTime && new Date(lastTime) > new Date(cutoff)) {
       active.push(field)
