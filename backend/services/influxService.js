@@ -35,7 +35,8 @@ async function getSensorsStatus(device_id, thresholdMinutes = 5) {
     const fieldQuery = `
       from(bucket: "${bucket}")
         |> range(start: -10m)
-        |> filter(fn: (r) => r._measurement == "pico/${device_id}" and r._field == "${field}")
+        |> filter(fn: (r) => r["topic"] == "pico/${device_id}")
+        |> filter(fn: (r) => r["_field"] == "${field}")
         |> last()
     `
 
