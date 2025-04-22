@@ -3,11 +3,14 @@ const https = require('https');
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+
 const deviceRoutes = require('./routes/device');
 const mqttRoutes = require('./routes/mqtt');
-const influxRoutes = require('./routes/influx');
+const sensorRoutes = require('./routes/sensor');
+const authRoutes = require('./routes/auth');
+
 const setupSwagger = require('./swagger');
-const {updateInactiveDevices} = require('./utils/deviceMaintenance');
+const {updateInactiveDevices} = require('./services/deviceMaintenanceService');
 
 const app = express();
 const port = 3000;
@@ -33,7 +36,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/devices', express.json(), deviceRoutes);
 app.use('/mqtt', mqttRoutes);
-app.use('/influx', express.json(), influxRoutes);
+app.use('/sensors', express.json(), sensorRoutes);
+app.use('/', express.json(), authRoutes);
 
 // Vérifie toutes les minutes
 setInterval(() => {

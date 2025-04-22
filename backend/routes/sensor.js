@@ -4,7 +4,7 @@ const { getSensorsStatus, getSensorData } = require('../services/influxService')
 
 const router = express.Router()
 
-router.get('/sensors/:device_id', async (req, res) => {
+router.get('/:device_id', async (req, res) => {
   const { device_id } = req.params
 
   /*if (req.auth.sub !== device_id || req.auth.type !== 'device') {

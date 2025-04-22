@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
 const Device = require('../models/Device')
+const Admin = require('../models/Admin')
+const bcrypt = require('bcrypt')
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27017/iothink'
 const TELEGRAPH_API_KEY = process.env.TELEGRAPH_API_KEY
@@ -40,4 +42,33 @@ async function seed() {
   }
 }
 
+async function seedAdmin() {
+  const email = process.env.ADMIN_EMAIL
+  const password = process.env.ADMIN_PASSWORD
+
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    })
+
+    const existing = await Admin.findOne({ email })
+    if (existing) {
+      console.log('✅ Admin already exists:', email)
+    } else {
+      const hash = await bcrypt.hash(password, 10)
+
+      await Admin.create({ email, password: hash })
+      console.log('✅ Admin seeded:', email)
+    }
+  } catch (err) {
+    console.error('❌ Error seeding admin:', err)
+  } finally {
+    mongoose.connection.close()
+  }
+}
+
 seed()
+seedAdmin()
+
+
