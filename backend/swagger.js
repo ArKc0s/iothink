@@ -11,23 +11,21 @@ const options = {
     },
     components: {
       securitySchemes: {
-          Authorization: {
-              type: "http",
-              scheme: "bearer",
-              bearerFormat: "JWT",
-              value: "Bearer <JWT token here>"
-          }
+        bearerAuth: { 
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
       }
     },
     security: [
       {
-        bearerAuth: []
+        bearerAuth: [] 
       }
     ]
-  }, 
-  apis: ['./routes/*.js'], // fichiers avec les annotations Swagger
+  },
+  apis: ['./routes/*.js'],
 };
-
 const swaggerSpec = swaggerJSDoc(options);
 
 function setupSwagger(app) {
