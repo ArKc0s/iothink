@@ -16,6 +16,7 @@ services:
       - INFLUX_ORG=${INFLUX_ORG}
       - INFLUX_BUCKET=${INFLUX_BUCKET}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - MONGO_URI=${MONGO_URI}
     volumes:
       - ./certs:/certs:ro
     networks:
