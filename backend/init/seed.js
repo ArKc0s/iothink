@@ -43,32 +43,23 @@ async function seed() {
 }
 
 async function seedAdmin() {
-  const email = process.env.ADMIN_EMAIL
-  const password = process.env.ADMIN_PASSWORD
+  await mongoose.connect(process.env.MONGO_URI)
 
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
-
-    const existing = await Admin.findOne({ email })
-    if (existing) {
-      console.log('✅ Admin already exists:', email)
-    } else {
-      const hash = await bcrypt.hash(password, 10)
-
-      await Admin.create({ email, password: hash })
-      console.log('✅ Admin seeded:', email)
-    }
-  } catch (err) {
-    console.error('❌ Error seeding admin:', err)
-  } finally {
-    mongoose.connection.close()
+  const existing = await Admin.findOne({ username: 'admin' })
+  if (existing) {
+    console.log('Admin already exists')
+    process.exit(0)
   }
+
+  const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10)
+  const admin = new Admin({ username: 'admin', passwordHash })
+
+  await admin.save()
+  console.log('Admin seeded successfully')
+  process.exit(0)
 }
 
 seed()
-seedAdmin()
+seedAdmin().catch(console.error)
 
 

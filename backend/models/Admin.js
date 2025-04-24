@@ -1,8 +1,10 @@
 const mongoose = require('mongoose')
 
 const adminSchema = new mongoose.Schema({
-  email: String,
-  password: String, // Hashé idéalement (ex: bcrypt)
+  username: { type: String, required: true, unique: true },
+  passwordHash: { type: String, required: true },
+  refreshToken: { type: String }
 })
 
 module.exports = mongoose.model('Admin', adminSchema)
+

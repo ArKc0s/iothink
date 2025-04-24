@@ -33,35 +33,41 @@ const router = express.Router()
  *         description: Identifiants incorrects
  */
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body
+  const { username, password } = req.body
+  if (!username || !password) return res.status(400).json({ error: 'Missing credentials' })
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Missing credentials' })
+  const admin = await Admin.findOne({ username })
+  if (!admin || !(await bcrypt.compare(password, admin.passwordHash))) {
+    return res.status(401).json({ error: 'Invalid credentials' })
   }
 
+  const accessToken = jwt.sign({ sub: admin._id, type: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' })
+  const refreshToken = jwt.sign({ sub: admin._id }, process.env.JWT_SECRET, { expiresIn: '7d' })
+
+  admin.refreshToken = refreshToken
+  await admin.save()
+
+  return res.json({ accessToken, refreshToken })
+})
+
+router.post('/refresh', async (req, res) => {
+  const { refreshToken } = req.body
+  if (!refreshToken) return res.status(400).json({ error: 'Missing refresh token' })
+
   try {
-    const admin = await Admin.findOne({ email })
+    const payload = jwt.verify(refreshToken, process.env.JWT_SECRET)
+    const admin = await Admin.findById(payload.sub)
 
-    if (!admin) {
-      return res.status(401).json({ error: 'Invalid credentials' })
+    if (!admin || admin.refreshToken !== refreshToken) {
+      return res.status(403).json({ error: 'Invalid refresh token' })
     }
 
-    const match = await bcrypt.compare(password, admin.password)
-    if (!match) {
-      return res.status(401).json({ error: 'Invalid credentials' })
-    }
-
-    const token = jwt.sign(
-      { sub: admin._id.toString(), type: 'admin' },
-      process.env.JWT_SECRET,
-      { expiresIn: '2h' }
-    )
-
-    return res.status(200).json({ token })
+    const newAccessToken = jwt.sign({ sub: admin._id, type: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' })
+    return res.json({ accessToken: newAccessToken })
   } catch (err) {
-    console.error('[LOGIN ERROR]', err)
-    return res.status(500).json({ error: 'Server error' })
+    return res.status(403).json({ error: 'Token expired or invalid' })
   }
 })
 
 module.exports = router
+
