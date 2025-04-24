@@ -18,7 +18,12 @@ const options = {
               value: "Bearer <JWT token here>"
           }
       }
-    }
+    },
+    security: [
+      {
+        bearerAuth: []
+      }
+    ]
   }, 
   apis: ['./routes/*.js'], // fichiers avec les annotations Swagger
 };
