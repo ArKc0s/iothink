@@ -10,7 +10,7 @@ const router = express.Router()
  *   get:
  *     summary: Liste les capteurs actifs et inactifs d’un device
  *     tags:
- *       - InfluxDB
+ *       - Sensors
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -63,7 +63,7 @@ router.get('/:device_id', authenticate, async (req, res) => {
  *   get:
  *     summary: Récupère les données d’un capteur pour un device donné
  *     tags:
- *       - InfluxDB
+ *       - Sensors
  *     security:
  *       - bearerAuth: []
  *     parameters:
