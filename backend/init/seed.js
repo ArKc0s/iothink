@@ -45,6 +45,7 @@ async function seedAdmin() {
   const existing = await Admin.findOne({ username: 'admin' })
   if (existing) {
     console.log('Admin already exists')
+    return
   }
 
   const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10)
@@ -52,6 +53,7 @@ async function seedAdmin() {
 
   await admin.save()
   console.log('Admin seeded successfully')
+
 }
 
 async function main() {
