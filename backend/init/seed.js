@@ -34,11 +34,8 @@ async function seed() {
     } else {
       console.log(`[i] Device "telegraf" already exists.`)
     }
-
-    process.exit(0)
   } catch (err) {
     console.error('[✘] Failed to seed MongoDB:', err)
-    process.exit(1)
   }
 }
 
@@ -48,7 +45,6 @@ async function seedAdmin() {
   const existing = await Admin.findOne({ username: 'admin' })
   if (existing) {
     console.log('Admin already exists')
-    process.exit(0)
   }
 
   const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10)
@@ -56,10 +52,19 @@ async function seedAdmin() {
 
   await admin.save()
   console.log('Admin seeded successfully')
-  process.exit(0)
 }
 
-seed()
-seedAdmin().catch(console.error)
+async function main() {
+  try {
+    await seed()
+    await seedAdmin()
+    process.exit(0)
+  } catch (err) {
+    console.error('[✘] Failed during seeding:', err)
+    process.exit(1)
+  }
+}
+
+main()
 
 
