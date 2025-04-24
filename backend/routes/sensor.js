@@ -19,7 +19,7 @@ const router = express.Router()
  *         required: true
  *         schema:
  *           type: string
- *         description: Identifiant du device (ex: rpi-pico-001)
+ *         description: "Identifiant du device (ex: rpi-pico-001)"
  *     responses:
  *       200:
  *         description: Liste des capteurs et leur statut
@@ -78,19 +78,19 @@ router.get('/:device_id', authenticate, async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: Nom du capteur (ex: temperature, humidity)
+ *         description: "Nom du capteur (ex: temperature, humidity)"
  *       - in: query
  *         name: start
  *         schema:
  *           type: string
  *           default: "-1h"
- *         description: Début de la période (ex: -1h, -24h, 2024-01-01T00:00:00Z)
+ *         description: "Début de la période (ex: -1h, -24h, 2024-01-01T00:00:00Z)"
  *       - in: query
  *         name: stop
  *         schema:
  *           type: string
  *           default: "now()"
- *         description: Fin de la période (ex: now(), 2024-01-01T01:00:00Z)
+ *         description: "Fin de la période (ex: now(), 2024-01-01T01:00:00Z)"
  *     responses:
  *       200:
  *         description: Données du capteur
