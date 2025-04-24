@@ -19,18 +19,29 @@ const router = express.Router()
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - username
  *               - password
  *             properties:
- *               email:
+ *               username:
  *                 type: string
  *               password:
  *                 type: string
  *     responses:
  *       200:
- *         description: Connexion réussie, retourne un JWT
+ *         description: Connexion réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *       400:
+ *         description: Identifiants manquants
  *       401:
- *         description: Identifiants incorrects
+ *         description: Identifiants invalides
  */
 router.post('/login', async (req, res) => {
   const { username, password } = req.body
@@ -50,6 +61,39 @@ router.post('/login', async (req, res) => {
   return res.json({ accessToken, refreshToken })
 })
 
+/**
+ * @swagger
+ * /refresh:
+ *   post:
+ *     summary: Renouvellement du token administrateur
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Nouveau token JWT renvoyé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *       400:
+ *         description: Token manquant
+ *       403:
+ *         description: Token invalide ou expiré
+ */
 router.post('/refresh', async (req, res) => {
   const { refreshToken } = req.body
   if (!refreshToken) return res.status(400).json({ error: 'Missing refresh token' })
