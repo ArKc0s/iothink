@@ -140,6 +140,8 @@ router.post('/credentials', async (req, res) => {
  *     summary: Autorise un appareil à publier
  *     tags:
  *       - Devices
+ *     security:
+ *       - bearerAuth: []  # Authentification JWT requise (admin)
  *     parameters:
  *       - name: device_id
  *         in: path
@@ -149,11 +151,26 @@ router.post('/credentials', async (req, res) => {
  *     responses:
  *       200:
  *         description: Appareil autorisé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 device_id:
+ *                   type: string
+ *       403:
+ *         description: Accès refusé - admin requis
  *       404:
  *         description: Appareil introuvable
  */
-router.patch('/:device_id/authorize', async (req, res) => {
+router.patch('/:device_id/authorize', authenticate, async (req, res) => {
   const { device_id } = req.params
+
+  if (req.auth?.type !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' })
+  }
 
   try {
     const device = await Device.findOne({ device_id })
@@ -178,7 +195,7 @@ router.patch('/:device_id/authorize', async (req, res) => {
       device_id: device.device_id,
     })
   } catch (err) {
-    console.error(err)
+    console.error('[AUTHORIZE ERROR]', err)
     return res.status(500).json({ error: 'Server error' })
   }
 })
@@ -238,6 +255,8 @@ router.get('/:device_id/token', authenticate, async (req, res) => {
  *     summary: Retourne le statut actuel et la dernière connexion d’un device
  *     tags:
  *       - Devices
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: device_id
  *         in: path
@@ -247,11 +266,30 @@ router.get('/:device_id/token', authenticate, async (req, res) => {
  *     responses:
  *       200:
  *         description: Informations du device
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 device_id:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                   enum: [active, inactive]
+ *                 last_seen:
+ *                   type: string
+ *                   format: date-time
+ *       403:
+ *         description: Accès refusé - admin requis
  *       404:
  *         description: Appareil introuvable
  */
-router.get('/:device_id/status', async (req, res) => {
+router.get('/:device_id/status', authenticate, async (req, res) => {
   const { device_id } = req.params;
+
+  if (req.auth?.type !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
 
   try {
     const device = await Device.findOne({ device_id });

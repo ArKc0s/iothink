@@ -3,6 +3,9 @@ const https = require('https');
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
+const cors = require('cors');
+const helmet = require('helmet');
 
 const deviceRoutes = require('./routes/device');
 const mqttRoutes = require('./routes/mqtt');
@@ -21,6 +24,20 @@ const options = {
   cert: fs.readFileSync('/certs/backend.crt')
 };
 
+const corsOptions = {
+  origin: [], // à adapter à ton domaine
+  methods: ['GET', 'POST', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+// Appliqué uniquement à certaines routes sensibles côté front
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Trop de tentatives, réessayez plus tard.' }
+});
+
+
 setupSwagger(app);
 
 mongoose.connect('mongodb://mongo:27017/iothink', {
@@ -30,9 +47,14 @@ mongoose.connect('mongodb://mongo:27017/iothink', {
 
 // Middleware de log
 app.use(morgan('dev'));
+app.use(helmet());
 
-// ⚠️ Ajoute bien les deux lignes ci-dessous
 app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOptions));
+
+app.use('/devices/register', authLimiter);
+app.use('/login', authLimiter);
+app.use('/refresh', authLimiter);
 
 app.use('/devices', express.json(), deviceRoutes);
 app.use('/mqtt', mqttRoutes);
