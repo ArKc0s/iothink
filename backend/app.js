@@ -40,9 +40,10 @@ const authLimiter = rateLimit({
 
 setupSwagger(app);
 
-mongoose.connect('mongodb://mongo:27017/iothink', {
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  authSource: "admin"
 });
 
 // Middleware de log
