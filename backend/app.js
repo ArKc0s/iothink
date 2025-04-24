@@ -25,7 +25,7 @@ const options = {
 };
 
 const corsOptions = {
-  origin: [], // à adapter à ton domaine
+  origin: ["http://localhost:3000", "http://localhost:4200"], 
   methods: ['GET', 'POST', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
