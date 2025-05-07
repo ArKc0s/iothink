@@ -308,4 +308,43 @@ router.get('/:device_id/status', authenticate, async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 });
+
+/**
+ * @swagger
+ * /devices:
+ *   get:
+ *     summary: Retourne la liste de tous les devices
+ *     tags:
+ *       - Devices
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des devices
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   device_id:
+ *                     type: string
+ *                   mac:
+ *                     type: string
+ */
+router.get('/', authenticate, async (req, res) => {
+  if (req.auth?.type !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' })
+  }
+
+  try {
+    const devices = await Device.find({})
+    return res.json(devices)
+  } catch (err) {
+    console.error('[GET DEVICES ERROR]', err)
+    return res.status(500).json({ error: 'Server error' })
+  }
+}
+)
 module.exports = router
