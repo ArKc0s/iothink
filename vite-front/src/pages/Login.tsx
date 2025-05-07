@@ -1,35 +1,76 @@
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react'
+import { Form, Input, Button, Alert } from 'antd'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate, Navigate } from 'react-router-dom'
 
-const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const { login } = useAuth();
-  const navigate = useNavigate();
+const Login: React.FC = () => {
+  const { login, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const success = await login(username, password);
-    if (success) navigate('/');
-  };
+  // Si déjà auth, on redirige tout de suite
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />
+  }
+
+  const onFinish = async (values: {
+    username: string
+    password: string
+  }) => {
+    setLoading(true)
+    const ok = await login(values.username, values.password)
+    setLoading(false)
+    if (ok) {
+      navigate('/', { replace: true })
+    } else {
+      setError('Identifiants invalides')
+    }
+  }
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Username</label>
-          <input value={username} onChange={(e) => setUsername(e.target.value)} />
-        </div>
-        <div>
-          <label>Password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
-        <button type="submit">Login</button>
-      </form>
-    </div>
-  );
-};
+    <Form
+      name="login"
+      onFinish={onFinish}
+      style={{
+        maxWidth: 320,
+        margin: '100px auto',
+        padding: 24,
+        border: '1px solid #f0f0f0',
+        borderRadius: 4
+      }}
+    >
+      {error && (
+        <Alert
+          type="error"
+          message={error}
+          style={{ marginBottom: 16 }}
+        />
+      )}
+      <Form.Item
+        name="username"
+        rules={[{ required: true, message: 'Veuillez saisir votre nom d’utilisateur' }]}
+      >
+        <Input placeholder="Nom d’utilisateur" />
+      </Form.Item>
+      <Form.Item
+        name="password"
+        rules={[{ required: true, message: 'Veuillez saisir votre mot de passe' }]}
+      >
+        <Input.Password placeholder="Mot de passe" />
+      </Form.Item>
+      <Form.Item>
+        <Button
+          type="primary"
+          htmlType="submit"
+          block
+          loading={loading}
+        >
+          Se connecter
+        </Button>
+      </Form.Item>
+    </Form>
+  )
+}
 
-export default Login;
+export default Login

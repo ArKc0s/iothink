@@ -4,7 +4,9 @@ import {
   HomeOutlined,
   AppstoreAddOutlined,
   SettingOutlined,
+  LogoutOutlined
 } from '@ant-design/icons';
+import LogoutButton from './LogoutButton';
 
 const { Sider } = Layout;
 
@@ -21,6 +23,9 @@ const Sidebar = () => {
         </Menu.Item>
         <Menu.Item key="3" icon={<SettingOutlined />}>
           <Link to="/settings">Settings</Link>
+        </Menu.Item>
+        <Menu.Item key="4" icon={<LogoutOutlined />}>
+          <LogoutButton />
         </Menu.Item>
       </Menu>
     </Sider>

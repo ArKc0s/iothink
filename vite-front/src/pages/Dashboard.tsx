@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext'
 
 interface DevicesStats {
   totalDevices: number
-  offlineDevices: number
+  inactiveDevices: number
 }
 
 const Dashboard: React.FC = () => {
@@ -17,7 +17,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get<DevicesStats>(`${import.meta.env.VITE_BACKEND_URL}/devices`, { headers: { Authorization: `Bearer ${token}` } })
+      .get<DevicesStats>(`${import.meta.env.VITE_BACKEND_URL}/devices/stats`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setStats(res.data))
       .then(() => console.log(token))
       .catch(() => setStats(null))
@@ -85,7 +85,7 @@ const Dashboard: React.FC = () => {
           key="refresh"
           onClick={() => {
             setLoading(true)
-            axios.get<DevicesStats>(`${import.meta.env.VITE_BACKEND_URL}/devices`, { headers: { Authorization: `Bearer ${token}` } })
+            axios.get<DevicesStats>(`${import.meta.env.VITE_BACKEND_URL}/devices/stats`, { headers: { Authorization: `Bearer ${token}` } })
               .then(res => setStats(res.data))
               .finally(() => setLoading(false))
           }}
@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
           <Card>
             <Statistic
               title="Hubs hors ligne"
-              value={stats.onlineDevices}
+              value={stats.inactiveDevices}
               prefix={<CloudOutlined style={{ color: '#ff4d4f' }} />}
             />
           </Card>
