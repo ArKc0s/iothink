@@ -339,12 +339,54 @@ router.get('/', authenticate, async (req, res) => {
   }
 
   try {
-    const devices = await Device.find({})
+    const devices = await Device.find({ device_id: { $ne: 'telegraf' } })
     return res.json(devices)
   } catch (err) {
     console.error('[GET DEVICES ERROR]', err)
     return res.status(500).json({ error: 'Server error' })
   }
-}
-)
+});
+
+/**
+ * @swagger
+ * /devices/stats:
+ *   get:
+ *     summary: Retourne les statistiques des devices
+ *     tags:
+ *       - Devices
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statistiques des devices
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalDevices:
+ *                   type: integer
+ *                 activeDevices:
+ *                   type: integer
+ *                 inactiveDevices:
+ *                   type: integer
+ */
+router.get('/stats', authenticate, async (req, res) => {
+  if (req.auth?.type !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' })
+  }
+
+  try {
+    const devices = await Device.find({ device_id: { $ne: 'telegraf' } })
+    const stats = {
+      totalDevices: devices.length,
+      activeDevices: devices.filter(d => d.status === 'active').length,
+      inactiveDevices: devices.filter(d => d.status === 'inactive').length,
+    }
+    return res.json(stats)
+  } catch (err) {
+    console.error('[GET DEVICE STATS ERROR]', err)
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
 module.exports = router

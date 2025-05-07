@@ -3,6 +3,7 @@ import { Row, Col, Card, Statistic, Spin, Empty, Table, Tag, Button } from 'antd
 import { PageHeader } from '@ant-design/pro-layout'
 import { ReloadOutlined, CloudOutlined, ApiOutlined, WifiOutlined } from '@ant-design/icons'
 import axios from 'axios'
+import { useAuth } from '../context/AuthContext'  
 
 interface DevicesStats {
   totalDevices: number
@@ -10,13 +11,15 @@ interface DevicesStats {
 }
 
 const Dashboard: React.FC = () => {
+  const { token } = useAuth() 
   const [stats, setStats] = useState<DevicesStats | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
     axios
-      .get<DevicesStats>(`${import.meta.env.VITE_BACKEND_URL}/devices`)
+      .get<DevicesStats>(`${import.meta.env.VITE_BACKEND_URL}/devices`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setStats(res.data))
+      .then(() => console.log(token))
       .catch(() => setStats(null))
       .finally(() => setLoading(false))
   }, [])
@@ -82,7 +85,7 @@ const Dashboard: React.FC = () => {
           key="refresh"
           onClick={() => {
             setLoading(true)
-            axios.get<DevicesStats>(`${import.meta.env.VITE_BACKEND_URL}/devices`)
+            axios.get<DevicesStats>(`${import.meta.env.VITE_BACKEND_URL}/devices`, { headers: { Authorization: `Bearer ${token}` } })
               .then(res => setStats(res.data))
               .finally(() => setLoading(false))
           }}
