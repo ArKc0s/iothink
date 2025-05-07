@@ -64,7 +64,7 @@ app.use('/', express.json(), authRoutes);
 
 // Vérifie toutes les minutes
 setInterval(() => {
-  updateInactiveDevices(5); // Inactif après 5 min sans contact
+  updateInactiveDevices(1); // Inactif après 1 min sans contact
 }, 60 * 1000);
 
 https.createServer(options, app).listen(port, () => {
