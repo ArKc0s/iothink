@@ -27,7 +27,8 @@ const options = {
 const corsOptions = {
   origin: ["http://localhost:3000", "http://localhost:4200", "https://localhost:5173"], 
   methods: ['GET', 'POST', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 };
 
 // Appliqué uniquement à certaines routes sensibles côté front
