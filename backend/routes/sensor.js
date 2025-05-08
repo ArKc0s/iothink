@@ -219,17 +219,28 @@ function fillMissingData(data, startDate, stopDate, bucketInterval) {
   let dataIndex = 0
 
   while (currentTime <= stopDate) {
+    const currentTimeStr = currentTime.toISOString()
+
+    // Vérifier si la donnée existe à ce timestamp
     if (dataIndex < data.length && new Date(data[dataIndex].timestamp).getTime() === currentTime.getTime()) {
-      // Ajouter les données existantes
       filledData.push(data[dataIndex])
       dataIndex++
     } else {
       // Ajouter une valeur null pour l'intervalle manquant
-      filledData.push({ timestamp: currentTime.toISOString(), value: null })
+      filledData.push({ timestamp: currentTimeStr, value: null })
     }
-    // Avancer de l'intervalle défini (par exemple, 10 secondes, 1 minute, etc.)
+
+    // Avancer au prochain intervalle
     currentTime = new Date(currentTime.getTime() + intervalMs)
   }
+
+  // Vérification et nettoyage des dates invalides
+  filledData.forEach(entry => {
+    if (isNaN(new Date(entry.timestamp).getTime())) {
+      console.warn('Invalid date detected, fixing entry:', entry)
+      entry.timestamp = null  // Ou une date de remplacement comme 'Invalid Date'
+    }
+  })
 
   return filledData
 }
