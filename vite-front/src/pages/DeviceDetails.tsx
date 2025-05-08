@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Card, Space, Select, Row, Col, Empty } from 'antd'
+import { Card, Space, Select, Row, Col, Empty, Statistic } from 'antd'
 import { useParams } from 'react-router-dom'
 import { fetchSensorData } from '../services/sensorService'
 import { useAuth } from '../context/AuthContext'
@@ -39,14 +39,6 @@ const DeviceDetails: React.FC = () => {
       for (const sensorName of sensors) {
         const points = await fetchSensorData(token, deviceId!, sensorName, timeRange)
         data[sensorName] = points
-
-        // Mise à jour de la dernière valeur connue
-        if (points.length > 0) {
-          setLatestData(prev => ({
-            ...prev,
-            [sensorName]: points[points.length - 1]
-          }))
-        }
       }
 
       setSensorData(data)
@@ -57,32 +49,48 @@ const DeviceDetails: React.FC = () => {
 
   // Connexion WebSocket pour les mises à jour en temps réel
   useEffect(() => {
-    if (!deviceId) return
+      if (!deviceId) return
 
-    const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor?device_id=${deviceId}`)
-    ws.onopen = () => console.log("WebSocket ouvert")
-    wsRef.current = ws
+      const connectWebSocket = () => {
+          const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor?device_id=${deviceId}`)
 
-    ws.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data)
-        const { sensor, value, timestamp } = message
+          ws.onopen = () => {
+              console.log("WebSocket ouvert")
+              wsRef.current = ws
+          }
 
-        console.log("Message WebSocket reçu", message)
+          ws.onmessage = (event) => {
+              try {
+                  const message = JSON.parse(event.data)
+                  const { sensor, value, timestamp } = message
 
-        setLatestData(prev => ({
-          ...prev,
-          [sensor]: { timestamp, value }
-        }))
-      } catch (error) {
-        console.error("Erreur de parsing des données WebSocket", error)
+                  console.log("Message WebSocket reçu", message)
+
+                  setLatestData(prev => ({
+                      ...prev,
+                      [sensor]: { timestamp, value }
+                  }))
+              } catch (error) {
+                  console.error("Erreur de parsing des données WebSocket", error)
+              }
+          }
+
+          ws.onclose = () => {
+              console.log("WebSocket fermé, tentative de reconnexion...")
+              setTimeout(() => connectWebSocket(), 3000) // Reconnexion après 3s
+          }
+
+          ws.onerror = (error) => {
+              console.error("Erreur WebSocket", error)
+              ws.close()
+          }
       }
-    }
 
-    ws.onclose = () => console.log("WebSocket fermé")
-    ws.onerror = (error) => console.error("Erreur WebSocket", error)
+      connectWebSocket()
 
-    return () => ws.close()
+      return () => {
+          wsRef.current?.close()
+      }
   }, [deviceId])
 
   useEffect(() => {
@@ -110,15 +118,30 @@ const DeviceDetails: React.FC = () => {
       />
 
       {/* Cards avec les dernières valeurs connues */}
-      <Row gutter={[24, 24]} style={{ marginBottom: 16 }}>
-        {sensors.map(sensorId => (
-          <Col key={sensorId} xs={24} sm={12} md={12} lg={6} xl={6}>
-            <Card title={sensorId} bordered={false} style={{ height: 150 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16, marginTop: 16 }}>
+        {sensors.map((sensorId, index) => (
+          <Col
+            key={sensorId}
+            xs={24}
+            sm={24 / Math.min(sensors.length, 4)}
+            md={24 / Math.min(sensors.length, 4)}
+            lg={24 / Math.min(sensors.length, 4)}
+            xl={24 / Math.min(sensors.length, 4)}
+          >
+            <Card style={{ height: 150, textAlign: 'center', borderRadius: '8px', backgroundColor: '#f6f8fa' }} bordered={false}>
               {latestData[sensorId] ? (
-                <div>
-                  <p>Dernière valeur : {latestData[sensorId].value}</p>
-                  <p>À : {new Date(latestData[sensorId].timestamp).toLocaleString()}</p>
-                </div>
+                <Statistic
+                  title={sensorId.toUpperCase()}
+                  value={latestData[sensorId].value}
+                  precision={2}
+                  valueStyle={{ fontSize: '24px' }}
+                  suffix={
+                    sensorId === 'temperature' ? '°C' :
+                    sensorId === 'humidity' ? '%' :
+                    sensorId === 'pressure' ? 'hPa' : ''
+                  }
+                  style={{ marginBottom: 16 }}
+                />
               ) : (
                 <Empty description="Aucune donnée disponible" />
               )}
@@ -126,6 +149,7 @@ const DeviceDetails: React.FC = () => {
           </Col>
         ))}
       </Row>
+
 
       {/* Grille des graphiques */}
       <Row gutter={[24, 24]}>

@@ -47,7 +47,7 @@ module.exports = (server) => {
       } catch (err) {
         console.error(`[WebSocket] Erreur lors de la récupération des données pour ${deviceId} :`, err)
       }
-    }, 5000)
+    }, 1000)
 
     ws.on('close', () => {
       clearInterval(intervalId)
