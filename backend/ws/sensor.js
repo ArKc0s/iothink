@@ -1,7 +1,6 @@
-// ws/sensor.js
 
 const WebSocket = require('ws')
-const { getSensorsStatus, getSensorData } = require('../services/influxService')
+const { getSensorData } = require('../services/influxService')
 
 module.exports = (server) => {
   const wss = new WebSocket.Server({ server, path: '/ws/sensor' })
@@ -22,53 +21,38 @@ module.exports = (server) => {
 
     console.log(`✅ Client connecté : ${deviceId}`)
 
-    try {
-      // Récupère tous les capteurs actifs du device
-      const status = await getSensorsStatus(deviceId)
-      const activeSensors = status.active
+    // Envoi des données en temps réel pour chaque capteur
+    const intervalId = setInterval(async () => {
+      try {
+        // Liste des capteurs que tu veux surveiller
+        const sensorNames = ['temperature', 'humidity', 'pressure'] // Remplace par tes capteurs réels
 
-      console.log(`🔄 Capteurs actifs pour ${deviceId} :`, activeSensors)
+        for (const sensorName of sensorNames) {
+          // Récupère la dernière donnée connue
+          const data = await getSensorData(deviceId, sensorName, '-1m', 'now()', '10s')
+          const latest = data.length > 0 ? data[data.length - 1] : null
 
-      if (activeSensors.length === 0) {
-        ws.send(JSON.stringify({ error: `Aucun capteur actif pour ${deviceId}` }))
-        ws.close()
-        return
-      }
-
-      // Envoi des données en temps réel pour chaque capteur actif
-      const intervalId = setInterval(async () => {
-        for (const sensor of activeSensors) {
-          try {
-            const data = await getSensorData(deviceId, sensor, '-1m', 'now()', '10s')
-            const latest = data.length > 0 ? data[data.length - 1] : null
-
-            if (latest) {
-              const message = JSON.stringify({
-                sensor,
-                value: latest._value,
-                timestamp: latest._time
-              })
-              ws.send(message)
-            }
-          } catch (err) {
-            console.error(`[WebSocket] Erreur lors de la récupération des données pour ${sensor} :`, err)
+          if (latest) {
+            const message = JSON.stringify({
+              sensor: sensorName,
+              value: latest._value,
+              timestamp: latest._time
+            })
+            ws.send(message)
           }
         }
-      }, 5000)
+      } catch (err) {
+        console.error(`[WebSocket] Erreur lors de la récupération des données pour ${deviceId} :`, err)
+      }
+    }, 5000)
 
-      ws.on('close', () => {
-        clearInterval(intervalId)
-        console.log(`❌ Client déconnecté : ${deviceId}`)
-      })
+    ws.on('close', () => {
+      clearInterval(intervalId)
+      console.log(`❌ Client déconnecté : ${deviceId}`)
+    })
 
-      ws.on('error', (err) => {
-        console.error(`⚠️ Erreur WebSocket : ${err.message}`)
-      })
-
-    } catch (err) {
-      console.error(`[WebSocket] Erreur lors de la récupération des capteurs pour ${deviceId} :`, err)
-      ws.send(JSON.stringify({ error: 'Erreur lors de la récupération des capteurs' }))
-      ws.close()
-    }
+    ws.on('error', (err) => {
+      console.error(`⚠️ Erreur WebSocket : ${err.message}`)
+    })
   })
 }
