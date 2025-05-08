@@ -63,20 +63,22 @@ const DeviceDetails: React.FC = () => {
   }, [deviceId, timeRange, token])
 
   useEffect(() => {
-    if (!deviceId) return
+    if (!deviceId || !token) return
+  
     const connectWebSocket = () => {
-      const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor?device_id=${deviceId}`)
-
+      // Utilise l'en-tête Sec-WebSocket-Protocol pour passer le token
+      const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor?device_id=${deviceId}`, `Bearer ${token}`)
+  
       ws.onopen = () => {
         console.log("WebSocket ouvert")
         wsRef.current = ws
       }
-
+  
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data)
           const { sensor, value, timestamp } = message
-
+  
           setLatestData(prev => ({
             ...prev,
             [sensor]: { timestamp, value }
@@ -85,24 +87,25 @@ const DeviceDetails: React.FC = () => {
           console.error("Erreur de parsing des données WebSocket", error)
         }
       }
-
+  
       ws.onclose = () => {
         console.log("WebSocket fermé, tentative de reconnexion...")
-        setTimeout(connectWebSocket, 3000)
+        setTimeout(connectWebSocket, 3000) // Tentative de reconnexion après 3 secondes
       }
-
+  
       ws.onerror = (error) => {
         console.error("Erreur WebSocket", error)
         ws.close()
       }
     }
-
+  
     connectWebSocket()
-
+  
     return () => {
       wsRef.current?.close()
     }
-  }, [deviceId])
+  }, [deviceId, token])
+  
 
   return (
     <div>
