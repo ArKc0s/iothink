@@ -66,7 +66,7 @@ app.use('/', express.json(), authRoutes);
 // Vérifie toutes les minutes
 setInterval(() => {
   updateInactiveDevices(1); // Inactif après 1 min sans contact
-}, 60 * 1000);
+}, 10 * 1000);
 
 https.createServer(options, app).listen(port, () => {
   console.log(`✅ Secure backend running at https://localhost:${port}`);
