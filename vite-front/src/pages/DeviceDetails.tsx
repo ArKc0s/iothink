@@ -30,72 +30,73 @@ const DeviceDetails: React.FC = () => {
   const [latestData, setLatestData] = useState<{ [sensorId: string]: SensorDataPoint }>({})
   const [timeRange, setTimeRange] = useState<string>('15m')
   const wsRef = useRef<WebSocket | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Récupération des données historiques
   const loadData = async () => {
     try {
       const data: { [sensorId: string]: SensorDataPoint[] } = {}
-
       for (const sensorName of sensors) {
         const points = await fetchSensorData(token, deviceId!, sensorName, timeRange)
         data[sensorName] = points
       }
-
       setSensorData(data)
     } catch (error) {
       console.error('Erreur lors du chargement des données des capteurs', error)
     }
   }
 
-  // Connexion WebSocket pour les mises à jour en temps réel
-  useEffect(() => {
-      if (!deviceId) return
-
-      const connectWebSocket = () => {
-          const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor?device_id=${deviceId}`)
-
-          ws.onopen = () => {
-              console.log("WebSocket ouvert")
-              wsRef.current = ws
-          }
-
-          ws.onmessage = (event) => {
-              try {
-                  const message = JSON.parse(event.data)
-                  const { sensor, value, timestamp } = message
-
-                  console.log("Message WebSocket reçu", message)
-
-                  setLatestData(prev => ({
-                      ...prev,
-                      [sensor]: { timestamp, value }
-                  }))
-              } catch (error) {
-                  console.error("Erreur de parsing des données WebSocket", error)
-              }
-          }
-
-          ws.onclose = () => {
-              console.log("WebSocket fermé, tentative de reconnexion...")
-              setTimeout(() => connectWebSocket(), 3000) // Reconnexion après 3s
-          }
-
-          ws.onerror = (error) => {
-              console.error("Erreur WebSocket", error)
-              ws.close()
-          }
-      }
-
-      connectWebSocket()
-
-      return () => {
-          wsRef.current?.close()
-      }
-  }, [deviceId])
-
   useEffect(() => {
     loadData()
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    intervalRef.current = setInterval(loadData, 5) // Mise à jour toutes les 30 secondes
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
   }, [deviceId, timeRange, token])
+
+  useEffect(() => {
+    if (!deviceId) return
+    const connectWebSocket = () => {
+      const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor?device_id=${deviceId}`)
+
+      ws.onopen = () => {
+        console.log("WebSocket ouvert")
+        wsRef.current = ws
+      }
+
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data)
+          const { sensor, value, timestamp } = message
+
+          console.log("Message WebSocket reçu", message)
+
+          setLatestData(prev => ({
+            ...prev,
+            [sensor]: { timestamp, value }
+          }))
+        } catch (error) {
+          console.error("Erreur de parsing des données WebSocket", error)
+        }
+      }
+
+      ws.onclose = () => {
+        console.log("WebSocket fermé, tentative de reconnexion...")
+        setTimeout(() => connectWebSocket(), 3000) // Reconnexion après 3s
+      }
+
+      ws.onerror = (error) => {
+        console.error("Erreur WebSocket", error)
+        ws.close()
+      }
+    }
+
+    connectWebSocket()
+
+    return () => {
+      wsRef.current?.close()
+    }
+  }, [deviceId])
 
   return (
     <div>
@@ -117,17 +118,9 @@ const DeviceDetails: React.FC = () => {
         style={{ paddingLeft: 0 }}
       />
 
-      {/* Cards avec les dernières valeurs connues */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16, marginTop: 16 }}>
         {sensors.map((sensorId, index) => (
-          <Col
-            key={sensorId}
-            xs={24}
-            sm={24 / Math.min(sensors.length, 4)}
-            md={24 / Math.min(sensors.length, 4)}
-            lg={24 / Math.min(sensors.length, 4)}
-            xl={24 / Math.min(sensors.length, 4)}
-          >
+          <Col key={sensorId} xs={24} sm={8} md={8} lg={8} xl={8}>
             <Card style={{ height: 150, textAlign: 'center', borderRadius: '8px', backgroundColor: '#f6f8fa' }} bordered={false}>
               {latestData[sensorId] ? (
                 <Statistic
@@ -135,12 +128,7 @@ const DeviceDetails: React.FC = () => {
                   value={latestData[sensorId].value}
                   precision={2}
                   valueStyle={{ fontSize: '24px' }}
-                  suffix={
-                    sensorId === 'temperature' ? '°C' :
-                    sensorId === 'humidity' ? '%' :
-                    sensorId === 'pressure' ? 'hPa' : ''
-                  }
-                  style={{ marginBottom: 16 }}
+                  suffix={sensorId === 'temperature' ? '°C' : sensorId === 'humidity' ? '%' : sensorId === 'pressure' ? 'hPa' : ''}
                 />
               ) : (
                 <Empty description="Aucune donnée disponible" />
@@ -150,8 +138,6 @@ const DeviceDetails: React.FC = () => {
         ))}
       </Row>
 
-
-      {/* Grille des graphiques */}
       <Row gutter={[24, 24]}>
         {sensors.map(sensorId => (
           <Col key={sensorId} xs={24} sm={24} md={12} lg={12} xl={12}>
