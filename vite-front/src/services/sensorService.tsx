@@ -1,17 +1,18 @@
 import apiClient from './apiClient';
 import type { SensorsStats } from '../types/SensorsStats';
+import type { SensorsResponse } from '../types/Sensor';
 
-/*export const fetchDevices = async (token: string): Promise<Device[]> => {
+export const fetchSensors = async (token: string): Promise<SensorsResponse> => {
     try {
-        const response = await apiClient.get<Device[]>('/devices', {
+        const response = await apiClient.get<SensorsResponse>('/sensors', {
         headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
     } catch (error) {
-        console.error('Error fetching devices:', error);
+        console.error('Error fetching sensors:', error);
         throw error;
     }
-};*/
+};
 
 export const fetchSensorsStats = async (token: string): Promise<SensorsStats> => {
     try {
