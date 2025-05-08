@@ -193,6 +193,8 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
     if (duration > 30 * 24 * 60 * 60) bucketInterval = '1d'  // Plus d'un mois
     if (duration > 365 * 24 * 60 * 60) bucketInterval = '7d' // Plus d'un an
 
+    console.log('Bucket Interval:', bucketInterval)
+
     const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval)
     return res.json({ sensor: sensor_name, data })
   } catch (err) {
