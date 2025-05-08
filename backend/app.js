@@ -15,11 +15,11 @@ const authRoutes = require('./routes/auth');
 const setupSwagger = require('./swagger');
 const {updateInactiveDevices} = require('./services/deviceMaintenanceService');
 
-const server = https.createServer(app)
-const sensorWs = require('./ws/sensor')
-
 const app = express();
 const port = 3000;
+
+const server = https.createServer(app)
+const sensorWs = require('./ws/sensor')
 
 // Certificats
 const options = {
