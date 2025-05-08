@@ -6,6 +6,59 @@ const router = express.Router()
 
 /**
  * @swagger
+ * /sensors:
+ *   get:
+ *     summary: Liste les capteurs actifs et inactifs de tous les devices
+ *     tags:
+ *       - Sensors
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des capteurs pour tous les devices
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties:
+ *                 type: object
+ *                 properties:
+ *                   active:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   inactive:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *       403:
+ *         description: Accès refusé (admin uniquement)
+ *       500:
+ *         description: Erreur serveur lors de la récupération des capteurs
+ */
+router.get('/', authenticate, async (req, res) => {
+  if (req.auth?.type !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  try {
+    const devices = await Device.find({ device_id: { $ne: 'telegraf' } });
+    const result = {};
+
+    for (const device of devices) {
+      const status = await getSensorsStatus(device.device_id);
+      result[device.device_id] = status;
+    }
+
+    return res.json(result);
+  } catch (err) {
+    console.error('[Device Status Error]', err);
+    return res.status(500).json({ error: 'Failed to retrieve devices and sensors' });
+  }
+});
+
+/**
+ * @swagger
  * /sensors/{device_id}:
  *   get:
  *     summary: Liste les capteurs actifs et inactifs d’un device
@@ -132,5 +185,54 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
     return res.status(500).json({ error: 'Failed to query sensor data' })
   }
 })
+
+/**
+ * @swagger
+ * /sensors/stats:
+ *   get:
+ *     summary: Récupère le nombre total de capteurs actifs et inactifs
+ *     tags:
+ *       - Sensors
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statistiques des capteurs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 activeSensors:
+ *                   type: integer
+ *                 inactiveSensors:
+ *                   type: integer
+ *       403:
+ *         description: Accès refusé (admin uniquement)
+ *       500:
+ *         description: Erreur serveur lors de la récupération des statistiques
+ */
+router.get('/stats', authenticate, async (req, res) => {
+  if (req.auth?.type !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  try {
+    const devices = await Device.find({ device_id: { $ne: 'telegraf' } });
+    let activeSensors = 0;
+    let inactiveSensors = 0;
+
+    for (const device of devices) {
+      const status = await getSensorsStatus(device.device_id);
+      activeSensors += status.active.length;
+      inactiveSensors += status.inactive.length;
+    }
+
+    return res.json({ activeSensors, inactiveSensors });
+  } catch (err) {
+    console.error('[Device Stats Error]', err);
+    return res.status(500).json({ error: 'Failed to retrieve device stats' });
+  }
+});
 
 module.exports = router
