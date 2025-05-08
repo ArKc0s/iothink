@@ -12,6 +12,7 @@ RUN npm install
 
 # Étape 6 : exposer le port de l'app
 EXPOSE 3000
+EXPOSE 3001
 
 # Étape 7 : commande de lancement
 CMD [ "npm", "start" ]
