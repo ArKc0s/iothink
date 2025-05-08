@@ -30,6 +30,9 @@ module.exports = (server) => {
         for (const sensorName of sensorNames) {
           // Récupère la dernière donnée connue
           const data = await getSensorData(deviceId, sensorName, '-365d', 'now()', '10s')
+
+          console.log(`Données pour ${sensorName} :`, data)
+
           const latest = data.length > 0 ? data[data.length - 1] : null
 
           if (latest) {
