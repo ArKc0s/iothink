@@ -2,7 +2,6 @@ const express = require('express')
 const authenticate = require('../middleware/auth')
 const { getSensorsStatus, getSensorData } = require('../services/influxService')
 const Device = require('../models/Device')
-const logger = require('../logger')
 
 const router = express.Router()
 
@@ -40,7 +39,6 @@ const router = express.Router()
  */
 router.get('/', authenticate, async (req, res) => {
   if (req.auth?.type !== 'admin') {
-    logger.warn('Unauthorized access attempt to /sensors by non-admin user');
     return res.status(403).json({ error: 'Admin access required' });
   }
 
@@ -55,7 +53,7 @@ router.get('/', authenticate, async (req, res) => {
 
     return res.json(result);
   } catch (err) {
-    logger.error('[Device Status Error]', err);
+    console.error('[Device Status Error]', err);
     return res.status(500).json({ error: 'Failed to retrieve devices and sensors' });
   }
 });
@@ -101,18 +99,17 @@ router.get('/sensor/:device_id', authenticate, async (req, res) => {
   const { device_id } = req.params
 
   if (req.auth?.type !== 'admin') {
-    logger.warn(`Unauthorized access attempt to /sensors/sensor/${device_id} by non-admin user`);
-    return res.status(403).json({ error: 'Admin access required' });
+    return res.status(403).json({ error: 'Admin access required' })
   }
 
   try {
-    const result = await getSensorsStatus(device_id);
-    return res.json(result);
+    const result = await getSensorsStatus(device_id)
+    return res.json(result)
   } catch (err) {
-    logger.error(`[Sensor Status Error] Device: ${device_id}`, err);
-    return res.status(500).json({ error: 'Failed to query sensor status' });
+    console.error('[Influx Error]', err)
+    return res.status(500).json({ error: 'Failed to query sensor status' })
   }
-});
+})
 
 /**
  * @swagger
@@ -178,37 +175,36 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
   const { start = '-1h', stop = 'now()' } = req.query
 
   if (req.auth?.type !== 'admin') {
-    logger.warn(`Unauthorized access attempt to /sensors/data/${device_id}/${sensor_name} by non-admin user`);
-    return res.status(403).json({ error: 'Admin access required' });
+    return res.status(403).json({ error: 'Admin access required' })
   }
 
   try {
     // Calcul de la durée totale en secondes
-    const now = new Date();
+    const now = new Date()
     const startDate = start.includes('-')
       ? new Date(now.getTime() + parseDuration(start))
-      : new Date(Date.parse(start));
-    const stopDate = stop === 'now()' ? now : new Date(Date.parse(stop));
-    const durationInSeconds = (stopDate - startDate) / 1000;
+      : new Date(Date.parse(start))
+    const stopDate = stop === 'now()' ? now : new Date(Date.parse(stop))
+    const durationInSeconds = (stopDate - startDate) / 1000
 
     // Définition dynamique du bucket interval
-    let bucketInterval = '10s';
-    if (durationInSeconds >= 60 * 60) bucketInterval = '1m';   // Plus d'une heure
-    if (durationInSeconds >= 24 * 60 * 60) bucketInterval = '15m';  // Plus d'un jour
-    if (durationInSeconds >= 7 * 24 * 60 * 60) bucketInterval = '1h';  // Plus d'une semaine
-    if (durationInSeconds >= 30 * 24 * 60 * 60) bucketInterval = '1d';  // Plus d'un mois
-    if (durationInSeconds >= 365 * 24 * 60 * 60) bucketInterval = '7d'; // Plus d'un an
+    let bucketInterval = '10s'
+    if (durationInSeconds >= 60 * 60) bucketInterval = '1m'   // Plus d'une heure
+    if (durationInSeconds >= 24 * 60 * 60) bucketInterval = '15m'  // Plus d'un jour
+    if (durationInSeconds >= 7 * 24 * 60 * 60) bucketInterval = '1h'  // Plus d'une semaine
+    if (durationInSeconds >= 30 * 24 * 60 * 60) bucketInterval = '1d'  // Plus d'un mois
+    if (durationInSeconds >= 365 * 24 * 60 * 60) bucketInterval = '7d' // Plus d'un an
 
-    logger.debug(`Calculated bucket interval: ${bucketInterval}`);
+    console.log(`Bucket Interval: ${bucketInterval}`)
 
-    const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval, true);
+    const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval, true)
 
-    return res.json({ sensor: sensor_name, data: data });
+    return res.json({ sensor: sensor_name, data: data })
   } catch (err) {
-    logger.error(`[Sensor Data Error] Device: ${device_id}, Sensor: ${sensor_name}`, err);
-    return res.status(500).json({ error: 'Failed to query sensor data' });
+    console.error('[Influx Error]', err)
+    return res.status(500).json({ error: 'Failed to query sensor data' })
   }
-});
+})
 
 function parseDuration(duration) {
   const units = {
@@ -216,14 +212,17 @@ function parseDuration(duration) {
     m: 60 * 1000,
     h: 60 * 60 * 1000,
     d: 24 * 60 * 60 * 1000
-  };
+  }
 
-  const match = duration.match(/(-?\d+)([smhd])/);
-  if (!match) return 0;
+  const match = duration.match(/(-?\d+)([smhd])/)
+  if (!match) return 0
 
-  const [, value, unit] = match;
-  return parseInt(value) * units[unit];
+  const [, value, unit] = match
+  return parseInt(value) * units[unit]
 }
+
+
+
 
 /**
  * @swagger
@@ -253,7 +252,6 @@ function parseDuration(duration) {
  */
 router.get('/stats', authenticate, async (req, res) => {
   if (req.auth?.type !== 'admin') {
-    logger.warn('Unauthorized access attempt to /sensors/stats by non-admin user');
     return res.status(403).json({ error: 'Admin access required' });
   }
 
@@ -270,7 +268,7 @@ router.get('/stats', authenticate, async (req, res) => {
 
     return res.json({ activeSensors, inactiveSensors });
   } catch (err) {
-    logger.error('[Device Stats Error]', err);
+    console.error('[Device Stats Error]', err);
     return res.status(500).json({ error: 'Failed to retrieve device stats' });
   }
 });

@@ -17,8 +17,6 @@ services:
       - INFLUX_BUCKET=${INFLUX_BUCKET}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - MONGO_URI=${MONGO_URI}
-      - LOGTAIL_SOURCE_TOKEN=${LOGTAIL_SOURCE_TOKEN}
-      - LOGTAIL_INGESTING_HOST=${LOGTAIL_INGESTING_HOST}
     volumes:
       - ./certs:/certs:ro
     networks:
