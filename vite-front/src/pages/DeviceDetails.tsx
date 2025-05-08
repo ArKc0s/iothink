@@ -59,7 +59,7 @@ const DeviceDetails: React.FC = () => {
   useEffect(() => {
     if (!deviceId) return
 
-    const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/${deviceId}`)
+    const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor/${deviceId}`)
     wsRef.current = ws
 
     ws.onmessage = (event) => {
