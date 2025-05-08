@@ -21,7 +21,7 @@ const Sidebar: React.FC = () => {
       try {
         if (token) {
           const devices = await fetchDevices(token)
-          setDevices(devices)
+          setDevices(devices.filter(device => device.authorized === true))
         }
       } catch (error) {
         console.error('Failed to load devices', error)

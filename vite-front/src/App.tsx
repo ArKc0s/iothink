@@ -6,6 +6,7 @@ import DeviceEnrollment from './pages/DeviceEnrollment';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
+import Pending from './pages/Pending';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
               <Route path="/" index element={<Dashboard />} />
               <Route path="devices/:deviceId" element={<DeviceDetails />} />
               <Route path="devices" element={<DeviceEnrollment />} />
+              <Route path="pending" element={<Pending />} />
             </Route>
           </Route>
         </Routes>

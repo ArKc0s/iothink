@@ -14,7 +14,7 @@ export const useDevices = (token: string | null | undefined) => {
     try {
       if (typeof token === 'string') {
         const devices = await fetchDevices(token)
-        setDeviceList(devices)
+        setDeviceList(devices.filter(device => device.authorized === true))
       } else {
         throw new Error('Invalid token')
       }

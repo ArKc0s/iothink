@@ -12,7 +12,7 @@ export const fetchDevices = async (token: string): Promise<Device[]> => {
         console.error('Error fetching devices:', error);
         throw error;
     }
-} ;
+};
 
 export const fetchDeviceStats = async (token: string): Promise<DevicesStats> => {
     try {
@@ -22,6 +22,17 @@ export const fetchDeviceStats = async (token: string): Promise<DevicesStats> => 
         return response.data;
     } catch (error) {
         console.error('Error fetching device stats:', error);
+        throw error;
+    }
+};
+
+export const authorizeDevice = async (deviceId: string, token: string): Promise<void> => {
+    try {
+        await apiClient.patch(`/devices/${deviceId}/authorize`, {}, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    } catch (error) {
+        console.error('Error authorizing device:', error);
         throw error;
     }
 };
