@@ -40,34 +40,21 @@ def get_sensor_readings():
 
 
 def connect_mqtt(token):
-    while True:
-        try:
-            client = MQTTClient(
-                client_id=MQTT_CLIENT_ID,
-                server=config.mqtt_server,
-                port=MQTT_PORT,
-                user=token,
-                password="ignored",
-                keepalive=60,
-                ssl=True,
-                ssl_params=MQTT_SSL_PARAMS
-            )
-            client.connect()
-            print("MQTT connecté")
-            return client
-        except Exception as e:
-            print("Erreur MQTT :", e)
-            print("Nouvelle tentative de connexion MQTT...")
-            sleep(5)
-
-
-def is_connected(client):
-    try:
-        client.ping()
-        return True
-    except Exception as e:
-        print("Déconnexion détectée :", e)
-        return False
+    client = MQTTClient(
+        client_id=MQTT_CLIENT_ID,
+        server=config.mqtt_server,
+        port=MQTT_PORT,
+        user=token,
+        password="ignored",
+        keepalive=60,
+        ssl=True,
+        ssl_params=MQTT_SSL_PARAMS
+    )
+    if not client.connect(clean_session=False):  # Assure une session persistante
+        print("Nouvelle session étant configurée")
+        client.subscribe(b"pico/rpi-pico-001")  # Abonnement au topic nécessaire
+    print("MQTT connecté")
+    return client
 
 
 try:
@@ -94,17 +81,17 @@ try:
                 gc.collect()
                 mqtt_client = connect_mqtt(jwt)
 
-        # Vérification de la connexion MQTT (robust)
-        mqtt_client.reconnect()
-
         # Publication des données capteur
         temperature, humidity, pressure = get_sensor_readings()
         payload = json.dumps({"humidity": humidity})
         mqtt_client.publish(TOPIC, payload)
         print("Publié :", payload)
+
+        # Vérification et gestion des messages entrants (non-bloquant)
+        mqtt_client.check_msg()
+
         gc.collect()
         sleep(10)
 
 except Exception as e:
     print("Erreur fatale :", e)
-

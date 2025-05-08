@@ -131,7 +131,7 @@ const DeviceDetails: React.FC = () => {
               {latestData[sensorId] ? (
                 <Statistic
                   title={sensorId.toUpperCase()}
-                  value={latestData[sensorId].value}
+                  value={latestData[sensorId]?.value ?? 0}
                   precision={2}
                   valueStyle={{ fontSize: '24px' }}
                   suffix={sensorId === 'temperature' ? '°C' : sensorId === 'humidity' ? '%' : sensorId === 'pressure' ? 'hPa' : ''}
