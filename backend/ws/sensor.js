@@ -18,20 +18,9 @@ module.exports = (server) => {
     server,
     path: '/ws/sensor',
     handleProtocols: (protocols, request) => {
-      // Vérifier si protocols est un tableau ou un objet similaire
-      let token = null
-
-      console.log("Protocols:", protocols)
-
-      if (Array.isArray(protocols)) {
-        // On cherche le protocole 'access_token' dans le tableau
-        for (const protocol of protocols) {
-          if (protocol.startsWith('access_token=')) {
-            token = protocol.split('=')[1]
-            break
-          }
-        }
-      }
+      // Récupérer le token depuis le Set de protocoles
+      const protocolsArray = Array.from(protocols) // Convertir le Set en tableau
+      const token = protocolsArray[1] // Le token est le deuxième élément du Set
 
       if (!token) {
         console.error("❌ Token manquant dans les protocoles")
@@ -46,7 +35,7 @@ module.exports = (server) => {
       }
 
       // Si le token est valide, on autorise la connexion et on retourne le protocole
-      return protocols[0] // Retourne le premier protocole (valide)
+      return protocolsArray[0] // Retourne le premier protocole (valide)
     }
   })
 
