@@ -38,8 +38,8 @@ module.exports = (server) => {
           if (latest) {
             const message = JSON.stringify({
               sensor: sensorName,
-              value: latest._value,
-              timestamp: latest._time
+              value: latest.value,
+              timestamp: latest.time
             })
             ws.send(message)
           }
