@@ -189,11 +189,11 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
 
     // Définition dynamique du bucket interval
     let bucketInterval = '10s'
-    if (durationInSeconds > 60 * 60) bucketInterval = '1m'   // Plus d'une heure
-    if (durationInSeconds > 24 * 60 * 60) bucketInterval = '15m'  // Plus d'un jour
-    if (durationInSeconds > 7 * 24 * 60 * 60) bucketInterval = '1h'  // Plus d'une semaine
-    if (durationInSeconds > 30 * 24 * 60 * 60) bucketInterval = '1d'  // Plus d'un mois
-    if (durationInSeconds > 365 * 24 * 60 * 60) bucketInterval = '7d' // Plus d'un an
+    if (durationInSeconds >= 60 * 60) bucketInterval = '1m'   // Plus d'une heure
+    if (durationInSeconds >= 24 * 60 * 60) bucketInterval = '15m'  // Plus d'un jour
+    if (durationInSeconds >= 7 * 24 * 60 * 60) bucketInterval = '1h'  // Plus d'une semaine
+    if (durationInSeconds >= 30 * 24 * 60 * 60) bucketInterval = '1d'  // Plus d'un mois
+    if (durationInSeconds >= 365 * 24 * 60 * 60) bucketInterval = '7d' // Plus d'un an
 
     console.log(`Bucket Interval: ${bucketInterval}`)
 

@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { Card, Space, Select, Row, Col, Empty, Statistic } from 'antd'
 import { useParams } from 'react-router-dom'
 import { fetchSensorData } from '../services/sensorService'
 import { useAuth } from '../context/AuthContext'
 import { ReloadOutlined } from '@ant-design/icons'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer
+} from 'recharts'
 import type { SensorDataPoint } from '../types/SensorDataPoint'
 import { PageHeader } from '@ant-design/pro-layout'
+import isEqual from 'lodash.isequal'
 
 const { Option } = Select
 
@@ -21,7 +25,7 @@ const timeRanges = [
   { label: '1 an', value: '365d' }
 ]
 
-const sensors = ['temperature', 'humidity', 'pressure'] // Remplace par tes capteurs réels
+const sensors = ['temperature', 'humidity', 'pressure'] // À adapter selon ton cas
 
 const DeviceDetails: React.FC = () => {
   const { token } = useAuth()
@@ -34,12 +38,16 @@ const DeviceDetails: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const data: { [sensorId: string]: SensorDataPoint[] } = {}
+      const newData: { [sensorId: string]: SensorDataPoint[] } = {}
       for (const sensorName of sensors) {
         const points = await fetchSensorData(token, deviceId!, sensorName, timeRange)
-        data[sensorName] = points
+        newData[sensorName] = points
       }
-      setSensorData(data)
+
+      // Optimisation : éviter de faire un set si rien n'a changé
+      if (!isEqual(sensorData, newData)) {
+        setSensorData(newData)
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des données des capteurs', error)
     }
@@ -48,7 +56,7 @@ const DeviceDetails: React.FC = () => {
   useEffect(() => {
     loadData()
     if (intervalRef.current) clearInterval(intervalRef.current)
-    intervalRef.current = setInterval(loadData, 5000) // Mise à jour toutes les 30 secondes
+    intervalRef.current = setInterval(loadData, 30000)
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
@@ -80,7 +88,7 @@ const DeviceDetails: React.FC = () => {
 
       ws.onclose = () => {
         console.log("WebSocket fermé, tentative de reconnexion...")
-        setTimeout(() => connectWebSocket(), 3000) // Reconnexion après 3s
+        setTimeout(connectWebSocket, 3000)
       }
 
       ws.onerror = (error) => {
@@ -117,7 +125,7 @@ const DeviceDetails: React.FC = () => {
       />
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16, marginTop: 16 }}>
-        {sensors.map((sensorId, index) => (
+        {sensors.map((sensorId) => (
           <Col key={sensorId} xs={24} sm={8} md={8} lg={8} xl={8}>
             <Card style={{ height: 150, textAlign: 'center', borderRadius: '8px', backgroundColor: '#f6f8fa' }} bordered={false}>
               {latestData[sensorId] ? (
@@ -137,26 +145,38 @@ const DeviceDetails: React.FC = () => {
       </Row>
 
       <Row gutter={[24, 24]}>
-        {sensors.map(sensorId => (
-          <Col key={sensorId} xs={24} sm={24} md={12} lg={12} xl={12}>
-            <Card title={sensorId} bordered={false} style={{ height: 350 }}>
-              {sensorData[sensorId] && sensorData[sensorId].length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={sensorData[sensorId]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="timestamp" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="value" name={sensorId} stroke="#1890ff" dot={{ r: 2 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <Empty description="Aucune donnée pour cette période" />
-              )}
-            </Card>
-          </Col>
-        ))}
+        {sensors.map(sensorId => {
+          const chart = useMemo(() => (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={sensorData[sensorId]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="timestamp" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  name={sensorId}
+                  stroke="#1890ff"
+                  dot={{ r: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ), [sensorData[sensorId]])
+
+          return (
+            <Col key={sensorId} xs={24} sm={24} md={12} lg={12} xl={12}>
+              <Card title={sensorId} bordered={false} style={{ height: 350 }}>
+                {sensorData[sensorId] && sensorData[sensorId].length > 0 ? (
+                  chart
+                ) : (
+                  <Empty description="Aucune donnée pour cette période" />
+                )}
+              </Card>
+            </Col>
+          )
+        })}
       </Row>
     </div>
   )
