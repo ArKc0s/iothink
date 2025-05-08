@@ -63,29 +63,30 @@ async function getSensorsStatus(device_id, thresholdMinutes = 0.25) {
 }
 
 async function getSensorData(device_id, sensor_name, start, stop, bucketInterval) {
-    const query = `
-      from(bucket: "${bucket}")
-        |> range(start: ${start}, stop: ${stop})
-        |> filter(fn: (r) => r["topic"] == "pico/${device_id}")
-        |> filter(fn: (r) => r["_field"] == "${sensor_name}")
-        |> aggregateWindow(every: ${bucketInterval}, fn: mean, createEmpty: false)
-        |> keep(columns: ["_time", "_value"])
-        |> sort(columns: ["_time"])
-    `
-  
-    const result = []
-    await new Promise((resolve, reject) => {
-      queryApi.queryRows(query, {
-        next(row, tableMeta) {
-          const o = tableMeta.toObject(row)
-          result.push({ time: o._time, value: o._value })
-        },
-        error(err) { reject(err) },
-        complete() { resolve() }
-      })
+  const query = `
+    from(bucket: "${bucket}")
+      |> range(start: ${JSON.stringify(start)}, stop: ${JSON.stringify(stop)})
+      |> filter(fn: (r) => r["topic"] == "pico/${device_id}")
+      |> filter(fn: (r) => r["_field"] == "${sensor_name}")
+      |> aggregateWindow(every: ${JSON.stringify(bucketInterval)}, fn: mean, createEmpty: false)
+      |> keep(columns: ["_time", "_value"])
+      |> sort(columns: ["_time"])
+  `
+
+  const result = []
+  await new Promise((resolve, reject) => {
+    queryApi.queryRows(query, {
+      next(row, tableMeta) {
+        const o = tableMeta.toObject(row)
+        result.push({ timestamp: o._time, value: o._value })
+      },
+      error(err) { reject(err) },
+      complete() { resolve() }
     })
-  
-    return result
-  }
+  })
+
+  return result
+}
+
   
   module.exports = { getSensorsStatus, getSensorData }
