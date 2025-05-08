@@ -18,15 +18,23 @@ module.exports = (server) => {
     server,
     path: '/ws/sensor',
     handleProtocols: (protocols, request) => {
-      // Vérifie si le token est dans le tableau des protocoles
-      const tokenProtocol = protocols.find(protocol => protocol.startsWith('access_token='))
-      if (!tokenProtocol) {
+      // Vérifier si protocols est un tableau ou un objet similaire
+      let token = null
+
+      if (Array.isArray(protocols)) {
+        // On cherche le protocole 'access_token' dans le tableau
+        for (const protocol of protocols) {
+          if (protocol.startsWith('access_token=')) {
+            token = protocol.split('=')[1]
+            break
+          }
+        }
+      }
+
+      if (!token) {
         console.error("❌ Token manquant dans les protocoles")
         return false // Rejet de la connexion WebSocket si le token est manquant
       }
-
-      // Extrait le token du protocole
-      const token = tokenProtocol.split('=')[1]
 
       // Vérification du token JWT
       const decoded = authenticateJWT(token)
