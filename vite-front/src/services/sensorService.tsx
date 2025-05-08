@@ -32,7 +32,6 @@ export const fetchSensorData = async (
     deviceId: string,
     sensorName: string,
     range: string,
-    density: number = 1
   ): Promise<SensorDataPoint[]> => {
     const now = new Date().toISOString()
     const start = range === 'now()' ? now : `-${range}`

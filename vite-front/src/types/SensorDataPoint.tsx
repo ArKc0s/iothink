@@ -1,4 +1,4 @@
 export interface SensorDataPoint {
     timestamp: string
-    value: number
+    value: number|null
 }

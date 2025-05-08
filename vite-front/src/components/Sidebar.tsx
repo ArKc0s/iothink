@@ -11,7 +11,7 @@ import '../styles/sidebar.css'
 const { Sider } = Layout
 
 const Sidebar: React.FC = () => {
-  const { user, token } = useAuth()
+  const { token } = useAuth()
   const [devices, setDevices] = useState<Device[]>([])
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
@@ -103,7 +103,7 @@ const Sidebar: React.FC = () => {
           <>
             <Avatar icon={<UserOutlined />} style={{ marginRight: 8 }} />
             <span style={{ color: 'white', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {user?.name || 'Utilisateur'}
+              {'Administrateur'}
             </span>
           </>
         )}

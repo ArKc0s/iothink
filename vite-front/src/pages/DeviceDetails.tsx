@@ -48,7 +48,7 @@ const DeviceDetails: React.FC = () => {
   useEffect(() => {
     loadData()
     if (intervalRef.current) clearInterval(intervalRef.current)
-    intervalRef.current = setInterval(loadData, 5) // Mise à jour toutes les 30 secondes
+    intervalRef.current = setInterval(loadData, 30) // Mise à jour toutes les 30 secondes
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }

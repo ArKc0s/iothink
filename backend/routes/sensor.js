@@ -197,13 +197,55 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
 
     console.log(`Bucket Interval: ${bucketInterval}`)
 
+    // Récupérer les données depuis la fonction getSensorData
     const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval)
-    return res.json({ sensor: sensor_name, data })
+
+    // Si les données sont récupérées, on va remplir les intervalles manquants avec des valeurs nulles
+    const filledData = fillMissingData(data, startDate, stopDate, bucketInterval)
+
+    return res.json({ sensor: sensor_name, data: filledData })
   } catch (err) {
     console.error('[Influx Error]', err)
     return res.status(500).json({ error: 'Failed to query sensor data' })
   }
 })
+
+// Fonction pour insérer les valeurs nulles dans les intervalles manquants
+function fillMissingData(data, startDate, stopDate, bucketInterval) {
+  const filledData = []
+  const intervalMs = getIntervalInMilliseconds(bucketInterval)
+
+  let currentTime = startDate
+  let dataIndex = 0
+
+  while (currentTime <= stopDate) {
+    if (dataIndex < data.length && new Date(data[dataIndex].timestamp).getTime() === currentTime.getTime()) {
+      // Ajouter les données existantes
+      filledData.push(data[dataIndex])
+      dataIndex++
+    } else {
+      // Ajouter une valeur null pour l'intervalle manquant
+      filledData.push({ timestamp: currentTime.toISOString(), value: null })
+    }
+    // Avancer de l'intervalle défini (par exemple, 10 secondes, 1 minute, etc.)
+    currentTime = new Date(currentTime.getTime() + intervalMs)
+  }
+
+  return filledData
+}
+
+// Fonction pour convertir les intervalles en millisecondes
+function getIntervalInMilliseconds(bucketInterval) {
+  const intervals = {
+    '10s': 10000,
+    '1m': 60000,
+    '15m': 900000,
+    '1h': 3600000,
+    '1d': 86400000,
+    '7d': 604800000
+  }
+  return intervals[bucketInterval] || 10000 // Par défaut, 10s
+}
 
 function parseDuration(duration) {
   const units = {
