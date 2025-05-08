@@ -1,7 +1,7 @@
 const express = require('express')
 const authenticate = require('../middleware/auth')
 const { getSensorsStatus, getSensorData } = require('../services/influxService')
-const Device = require('../models/deviceModel')
+const Device = require('../models/Device')
 
 const router = express.Router()
 
