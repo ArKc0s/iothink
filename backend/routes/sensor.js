@@ -94,7 +94,7 @@ router.get('/', authenticate, async (req, res) => {
  *       500:
  *         description: Erreur serveur lors de la récupération des capteurs
  */
-router.get('/:device_id', authenticate, async (req, res) => {
+router.get('/sensor/:device_id', authenticate, async (req, res) => {
   const { device_id } = req.params
 
   if (req.auth?.type !== 'admin') {
