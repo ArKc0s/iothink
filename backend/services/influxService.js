@@ -68,7 +68,7 @@ async function getSensorData(device_id, sensor_name, start, stop, bucketInterval
         |> range(start: ${start}, stop: ${stop})
         |> filter(fn: (r) => r["topic"] == "pico/${device_id}")
         |> filter(fn: (r) => r["_field"] == "${sensor_name}")
-        |> aggregateWindow(every: ${bucketInterval}, fn: mean, createEmpty: false)
+        |> aggregateWindow(every: ${bucketInterval}, fn: mean, createEmpty: true)
         |> keep(columns: ["_time", "_value"])
         |> sort(columns: ["_time"])
     `
