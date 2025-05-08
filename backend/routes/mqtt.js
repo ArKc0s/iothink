@@ -44,7 +44,6 @@ router.post('/auth', bodyParser.json(), async (req, res) => {
   }
 
   if (isTelegraf(username, password)) {
-    logger.info(`[AUTH] Telegraf authenticated successfully for username: ${username}`)
     return res.status(200).json({ Ok: true, Error: "" });
   }
 
@@ -59,7 +58,6 @@ router.post('/auth', bodyParser.json(), async (req, res) => {
     device.status = 'active'
     await device.save()
 
-    logger.info(`[AUTH] Device authenticated successfully for username: ${username}`)
     return res.status(200).json({ Ok: true, Error: "" });
   } catch (err) {
     logger.error(`[AUTH ERROR] ${err.message}`, { stack: err.stack })
@@ -96,7 +94,6 @@ router.post('/superuser', bodyParser.json(), (req, res) => {
   }
 
   if (username === 'telegraf') {
-    logger.info(`[SUPERUSER] Superuser check passed for username: ${username}`)
     return res.status(200).json({ Ok: true, Error: "" })
   }
 
@@ -135,13 +132,11 @@ router.post('/acl', bodyParser.json(), async (req, res) => {
   }
 
   if (username === 'telegraf') {
-    logger.info(`[ACL] Access granted for telegraf on topic: ${topic}`)
     return res.status(200).json({ Ok: true, Error: "" })
   }
 
   const expectedTopic = `pico/${username}`
   if (topic === expectedTopic) {
-    logger.info(`[ACL] Access granted for username: ${username} on topic: ${topic}`)
     return res.status(200).json({ Ok: true, Error: "" })
   } else {
     logger.warn(`[ACL] Access denied for username: ${username} on topic: ${topic}`)
@@ -189,7 +184,6 @@ router.post('/jwt/auth', async (req, res) => {
     device.status = 'active'
     await device.save()
 
-    logger.info(`[JWT AUTH] Device authenticated successfully for id: ${decoded.sub}`)
     return res.status(200).json({ Ok: true, Error: '' })
   } catch (err) {
     logger.error(`[JWT AUTH ERROR] ${err.message}`, { stack: err.stack })
@@ -228,7 +222,6 @@ router.post('/jwt/superuser', (req, res) => {
       return res.status(403).json({ Ok: false, Error: 'Invalid token type' })
     }
 
-    logger.info(`[JWT SUPERUSER] Superuser check passed for id: ${decoded.sub}`)
     return res.status(200).json({ Ok: false, Error: '' }) // No superusers
   } catch (err) {
     logger.error(`[JWT SUPERUSER ERROR] ${err.message}`, { stack: err.stack })
@@ -289,7 +282,6 @@ router.post('/jwt/acl', bodyParser.json(), async (req, res) => {
         device.last_seen = new Date()
         device.status = 'active'
         await device.save()
-        logger.info(`[JWT ACL] Access granted for device id: ${decoded.sub} on topic: ${topic}`)
       } else {
         logger.warn(`[JWT ACL] Device not found for id: ${decoded.sub}`)
       }

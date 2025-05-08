@@ -21,7 +21,6 @@ function authenticateJWT(req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.auth = decoded;  // contains sub and type
-        logger.info(`Token verified for user ${decoded.sub}, type: ${decoded.type}`);
         next();
     } catch (err) {
       logger.error(`Token verification failed for request to ${req.originalUrl} - ${err.message}`);

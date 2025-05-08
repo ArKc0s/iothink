@@ -9,11 +9,6 @@ async function updateInactiveDevices(thresholdMinutes = 5) {
       { last_seen: { $lt: threshold }, status: 'active' },
       { $set: { status: 'inactive' } }
     );
-    if (result.modifiedCount > 0) {
-      logger.info(`[MAINTENANCE] ${result.modifiedCount} device(s) marked as inactive.`);
-    } else {
-      logger.info('[MAINTENANCE] No devices were marked as inactive.');
-    }
   } catch (err) {
     logger.error('[MAINTENANCE ERROR]', err);
   }

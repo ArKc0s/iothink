@@ -40,8 +40,6 @@ function authenticateJWT(token) {
     }
     })
 
-    logger.info("WebSocket server ready")
-
     // Gestion de la connexion WebSocket
     wss.on('connection', async (ws, req) => {
     const urlParams = new URLSearchParams(req.url.split('?')[1])
@@ -53,8 +51,6 @@ function authenticateJWT(token) {
       ws.close()
       return
     }
-
-    logger.info(`Client connecté : ${deviceId}`)
 
     // Envoi des données en temps réel pour chaque capteur
     const intervalId = setInterval(async () => {
@@ -83,7 +79,6 @@ function authenticateJWT(token) {
     // Fermeture de la connexion WebSocket
     ws.on('close', () => {
       clearInterval(intervalId)
-      logger.info(`Client déconnecté : ${deviceId}`)
     })
 
     // Gestion des erreurs WebSocket

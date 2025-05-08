@@ -44,7 +44,6 @@ router.post('/register', async (req, res) => {
   try {
     const existing = await Device.findOne({ device_id });
     if (existing) {
-      logger.info(`Device ${device_id} already registered`);
       return res.status(200).json({ status: existing.authorized ? 'approved' : 'pending' });
     }
 
@@ -58,7 +57,6 @@ router.post('/register', async (req, res) => {
     });
 
     await newDevice.save();
-    logger.info(`Device ${device_id} registered successfully`);
 
     return res.status(202).json({
       status: 'pending',
@@ -111,7 +109,6 @@ router.post('/credentials', async (req, res) => {
     const device = await Device.findOne({ device_id });
 
     if (!device) {
-      logger.info(`Device ${device_id} not found`);
       return res.status(404).json({ error: 'Device not found' });
     }
 
@@ -126,7 +123,6 @@ router.post('/credentials', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    logger.info(`Credentials issued for device ${device_id}`);
     return res.status(200).json({
       authorized: true,
       device_id: device.device_id,
@@ -185,12 +181,10 @@ router.patch('/:device_id/authorize', authenticate, async (req, res) => {
     const device = await Device.findOne({ device_id });
 
     if (!device) {
-      logger.info(`Device ${device_id} not found`);
       return res.status(404).json({ error: 'Device not found' });
     }
 
     if (device.authorized) {
-      logger.info(`Device ${device_id} is already authorized`);
       return res.status(200).json({
         message: 'Device already authorized',
         device_id: device.device_id,
@@ -201,7 +195,6 @@ router.patch('/:device_id/authorize', authenticate, async (req, res) => {
     device.api_key = crypto.randomUUID();
     await device.save();
 
-    logger.info(`Device ${device_id} authorized successfully`);
     return res.status(200).json({
       message: 'Device authorized',
       device_id: device.device_id,
@@ -255,7 +248,6 @@ router.get('/:device_id/token', authenticate, async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    logger.info(`Token renewed successfully for device ${device_id}`);
     return res.json({ jwt: token });
   } catch (err) {
     logger.error('Error renewing token', { error: err });
@@ -311,11 +303,9 @@ router.get('/:device_id/status', authenticate, async (req, res) => {
     const device = await Device.findOne({ device_id });
 
     if (!device) {
-      logger.info(`Device ${device_id} not found`);
       return res.status(404).json({ error: 'Device not found' });
     }
 
-    logger.info(`Status retrieved for device ${device_id}`);
     return res.json({
       device_id: device.device_id,
       status: device.status,
@@ -359,7 +349,6 @@ router.get('/', authenticate, async (req, res) => {
 
   try {
     const devices = await Device.find({ device_id: { $ne: 'telegraf' } });
-    logger.info('Successfully retrieved all devices');
     return res.json(devices);
   } catch (err) {
     logger.error('Error retrieving devices', { error: err });
@@ -404,7 +393,6 @@ router.get('/stats', authenticate, async (req, res) => {
       activeDevices: devices.filter(d => d.status === 'active').length,
       inactiveDevices: devices.filter(d => d.status === 'inactive').length,
     };
-    logger.info('Successfully retrieved device stats', stats);
     return res.json(stats);
   } catch (err) {
     logger.error('Error retrieving device stats', { error: err });

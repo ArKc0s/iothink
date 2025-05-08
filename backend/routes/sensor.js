@@ -45,7 +45,6 @@ router.get('/', authenticate, async (req, res) => {
   }
 
   try {
-    logger.info('Fetching devices and sensors status');
     const devices = await Device.find({ device_id: { $ne: 'telegraf' } });
     const result = {};
 
@@ -54,7 +53,6 @@ router.get('/', authenticate, async (req, res) => {
       result[device.device_id] = status;
     }
 
-    logger.info('Successfully retrieved devices and sensors status');
     return res.json(result);
   } catch (err) {
     logger.error('[Device Status Error]', err);
@@ -108,9 +106,7 @@ router.get('/sensor/:device_id', authenticate, async (req, res) => {
   }
 
   try {
-    logger.info(`Fetching sensor status for device: ${device_id}`);
     const result = await getSensorsStatus(device_id);
-    logger.info(`Successfully retrieved sensor status for device: ${device_id}`);
     return res.json(result);
   } catch (err) {
     logger.error(`[Sensor Status Error] Device: ${device_id}`, err);
@@ -187,8 +183,6 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
   }
 
   try {
-    logger.info(`Fetching sensor data for device: ${device_id}, sensor: ${sensor_name}, start: ${start}, stop: ${stop}`);
-
     // Calcul de la durée totale en secondes
     const now = new Date();
     const startDate = start.includes('-')
@@ -209,7 +203,6 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
 
     const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval, true);
 
-    logger.info(`Successfully retrieved sensor data for device: ${device_id}, sensor: ${sensor_name}`);
     return res.json({ sensor: sensor_name, data: data });
   } catch (err) {
     logger.error(`[Sensor Data Error] Device: ${device_id}, Sensor: ${sensor_name}`, err);
@@ -265,7 +258,6 @@ router.get('/stats', authenticate, async (req, res) => {
   }
 
   try {
-    logger.info('Fetching sensor statistics');
     const devices = await Device.find({ device_id: { $ne: 'telegraf' } });
     let activeSensors = 0;
     let inactiveSensors = 0;
@@ -276,7 +268,6 @@ router.get('/stats', authenticate, async (req, res) => {
       inactiveSensors += status.inactive.length;
     }
 
-    logger.info('Successfully retrieved sensor statistics');
     return res.json({ activeSensors, inactiveSensors });
   } catch (err) {
     logger.error('[Device Stats Error]', err);

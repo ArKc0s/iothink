@@ -54,9 +54,9 @@ mongoose.connect(process.env.MONGO_URI, {
   useUnifiedTopology: true,
   authSource: "admin"
 }).then(() => {
-  console.log('✅ Connected to MongoDB');
+  logger.info('Connected to MongoDB');
 }).catch(err => {
-  console.error('❌ MongoDB connection error:', err);
+  logger.error('MongoDB connection error:', err);
 });
 
 // Middleware setup
@@ -120,11 +120,11 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(`Global error handler: ${err.message}`, { stack: err.stack });
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
 // Server startup
 server.listen(port, () => {
-  console.log(`✅ Secure backend running at https://localhost:${port}`);
+  logger.info(`Secure backend running at https://localhost:${port}`);
 });

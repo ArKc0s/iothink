@@ -64,7 +64,6 @@ router.post('/login', async (req, res) => {
     admin.refreshToken = refreshToken
     await admin.save()
 
-    logger.info(`Admin ${username} logged in successfully`)
     return res.json({ accessToken, refreshToken })
   } catch (err) {
     logger.error(`Error during login for username: ${username} - ${err.message}`)
@@ -122,7 +121,6 @@ router.post('/refresh', async (req, res) => {
     }
 
     const newAccessToken = jwt.sign({ sub: admin._id, type: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' })
-    logger.info(`New access token generated for admin ID: ${admin._id}`)
     return res.json({ accessToken: newAccessToken })
   } catch (err) {
     logger.error(`Error during token refresh: ${err.message}`)
