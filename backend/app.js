@@ -9,8 +9,7 @@ const morgan = require('morgan');
 const path = require('path');
 const winston = require('winston');
 const expressWinston = require('express-winston');
-const { Logtail } = require('@logtail/node');
-const { LogtailTransport } = require('@logtail/winston');
+const logger = require('./logger');
 
 // Routes
 const deviceRoutes = require('./routes/device');
@@ -26,20 +25,13 @@ const { updateInactiveDevices } = require('./services/deviceMaintenanceService')
 const app = express();
 const port = 3000;
 
-// HTTPS certificates
+// HTTPS certificates (replace with your actual certificate paths)
 const options = {
   key: fs.readFileSync('/certs/backend.key'),
   cert: fs.readFileSync('/certs/backend.crt')
 };
 const server = https.createServer(options, app);
 const sensorWs = require('./ws/sensor');
-
-// Logtail setup
-const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN,
-  {
-    endpoint: 'https://' + process.env.LOGTAIL_INGESTING_HOST,
-  }
-);
 
 // CORS configuration
 const corsOptions = {
@@ -51,7 +43,7 @@ const corsOptions = {
 
 // Rate limiter for sensitive routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000,  // 15 minutes
   max: 10,
   message: { error: 'Too many attempts, please try again later.' }
 });
@@ -77,8 +69,7 @@ app.use(express.json());
 app.use(expressWinston.logger({
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: path.join(__dirname, 'logs', 'requests.log') }),
-    new LogtailTransport(logtail)
+    new winston.transports.File({ filename: path.join(__dirname, 'logs', 'requests.log') })
   ],
   format: winston.format.combine(
     winston.format.timestamp(),
@@ -101,7 +92,7 @@ app.use('/', authRoutes);
 // Swagger setup
 setupSwagger(app);
 
-// Inactive device check
+// Inactive device check (every 5 minutes)
 setInterval(() => {
   updateInactiveDevices(0.25);
 }, 5 * 60 * 1000);
@@ -110,17 +101,17 @@ setInterval(() => {
 sensorWs(server);
 
 // Error logging
-app.use(expressWinston.errorLogger({
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: path.join(__dirname, 'logs', 'errors.log') }),
-    new LogtailTransport(logtail)
-  ],
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-}));
+app.use((err, req, res, next) => {
+  logger.error({
+    message: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    body: req.body,
+    query: req.query,
+  });
+  next(err);
+});
 
 // 404 Handler
 app.use((req, res) => {

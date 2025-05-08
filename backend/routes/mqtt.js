@@ -2,6 +2,7 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const Device = require('../models/Device')
 const bodyParser = require('body-parser')
+const logger = require('../logger')
 
 const router = express.Router()
 
@@ -37,13 +38,20 @@ const isTelegraf = (username, password) => {
  */
 router.post('/auth', bodyParser.json(), async (req, res) => {
   const { username, password } = req.body
-  if (!username || !password) return res.status(403).json({ Ok: false, Error: "ERROR" });
+  if (!username || !password) {
+    logger.warn('[AUTH] Missing username or password')
+    return res.status(403).json({ Ok: false, Error: "ERROR" });
+  }
 
-  if (isTelegraf(username, password)) return res.status(200).json({ Ok: true, Error: "" })
+  if (isTelegraf(username, password)) {
+    logger.info(`[AUTH] Telegraf authenticated successfully for username: ${username}`)
+    return res.status(200).json({ Ok: true, Error: "" });
+  }
 
   try {
     const device = await Device.findOne({ device_id: username })
     if (!device || !device.authorized || device.api_key !== password) {
+      logger.warn(`[AUTH] Authentication failed for username: ${username}`)
       return res.status(403).json({ Ok: false, Error: "ERROR" });
     }
 
@@ -51,9 +59,10 @@ router.post('/auth', bodyParser.json(), async (req, res) => {
     device.status = 'active'
     await device.save()
 
+    logger.info(`[AUTH] Device authenticated successfully for username: ${username}`)
     return res.status(200).json({ Ok: true, Error: "" });
   } catch (err) {
-    console.error('[AUTH ERROR]', err)
+    logger.error(`[AUTH ERROR] ${err.message}`, { stack: err.stack })
     return res.status(403).json({ Ok: false, Error: "ERROR" });
   }
 })
@@ -81,8 +90,18 @@ router.post('/auth', bodyParser.json(), async (req, res) => {
  */
 router.post('/superuser', bodyParser.json(), (req, res) => {
   const { username } = req.body
-  if (username === 'telegraf') return res.status(200).json({ Ok: true, Error: "" })
-  return res.status(403).json({ Ok: false, Error: "ERROR" });
+  if (!username) {
+    logger.warn('[SUPERUSER] Missing username')
+    return res.status(403).json({ Ok: false, Error: "ERROR" })
+  }
+
+  if (username === 'telegraf') {
+    logger.info(`[SUPERUSER] Superuser check passed for username: ${username}`)
+    return res.status(200).json({ Ok: true, Error: "" })
+  }
+
+  logger.warn(`[SUPERUSER] Superuser check failed for username: ${username}`)
+  return res.status(403).json({ Ok: false, Error: "ERROR" })
 })
 
 /**
@@ -110,12 +129,24 @@ router.post('/superuser', bodyParser.json(), (req, res) => {
  */
 router.post('/acl', bodyParser.json(), async (req, res) => {
   const { username, topic } = req.body
-  if (!username || !topic) return res.status(403).json({ Ok: false, Error: "ERROR" });
+  if (!username || !topic) {
+    logger.warn('[ACL] Missing username or topic')
+    return res.status(403).json({ Ok: false, Error: "ERROR" })
+  }
 
-  if (username === 'telegraf') return res.status(200).json({ Ok: true, Error: "" })
+  if (username === 'telegraf') {
+    logger.info(`[ACL] Access granted for telegraf on topic: ${topic}`)
+    return res.status(200).json({ Ok: true, Error: "" })
+  }
 
   const expectedTopic = `pico/${username}`
-  return topic === expectedTopic ? res.status(200).json({ Ok: true, Error: "" }) : res.status(403).json({ Ok: false, Error: "ERROR" });
+  if (topic === expectedTopic) {
+    logger.info(`[ACL] Access granted for username: ${username} on topic: ${topic}`)
+    return res.status(200).json({ Ok: true, Error: "" })
+  } else {
+    logger.warn(`[ACL] Access denied for username: ${username} on topic: ${topic}`)
+    return res.status(403).json({ Ok: false, Error: "ERROR" })
+  }
 })
 
 /**
@@ -135,17 +166,22 @@ router.post('/acl', bodyParser.json(), async (req, res) => {
  */
 router.post('/jwt/auth', async (req, res) => {
   const token = extractToken(req)
-  if (!token) return res.status(401).json({ Ok: false, Error: 'No token' })
+  if (!token) {
+    logger.warn('[JWT AUTH] No token provided')
+    return res.status(401).json({ Ok: false, Error: 'No token' })
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
     if (decoded.type !== 'device') {
+      logger.warn('[JWT AUTH] Invalid token type')
       return res.status(403).json({ Ok: false, Error: 'Invalid token type' })
     }
 
     const device = await Device.findOne({ device_id: decoded.sub })
     if (!device || !device.authorized) {
+      logger.warn(`[JWT AUTH] Unauthorized device for id: ${decoded.sub}`)
       return res.status(403).json({ Ok: false, Error: 'Unauthorized device' })
     }
 
@@ -153,9 +189,10 @@ router.post('/jwt/auth', async (req, res) => {
     device.status = 'active'
     await device.save()
 
+    logger.info(`[JWT AUTH] Device authenticated successfully for id: ${decoded.sub}`)
     return res.status(200).json({ Ok: true, Error: '' })
   } catch (err) {
-    console.error('[JWT AUTH ERROR]', err.message)
+    logger.error(`[JWT AUTH ERROR] ${err.message}`, { stack: err.stack })
     return res.status(403).json({ Ok: false, Error: 'Invalid token' })
   }
 })
@@ -178,17 +215,23 @@ router.post('/jwt/auth', async (req, res) => {
  */
 router.post('/jwt/superuser', (req, res) => {
   const token = extractToken(req)
-  if (!token) return res.status(401).json({ Ok: false, Error: 'Missing token' })
+  if (!token) {
+    logger.warn('[JWT SUPERUSER] Missing token')
+    return res.status(401).json({ Ok: false, Error: 'Missing token' })
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
     if (decoded.type !== 'device') {
+      logger.warn('[JWT SUPERUSER] Invalid token type')
       return res.status(403).json({ Ok: false, Error: 'Invalid token type' })
     }
 
+    logger.info(`[JWT SUPERUSER] Superuser check passed for id: ${decoded.sub}`)
     return res.status(200).json({ Ok: false, Error: '' }) // No superusers
   } catch (err) {
+    logger.error(`[JWT SUPERUSER ERROR] ${err.message}`, { stack: err.stack })
     return res.status(403).json({ Ok: false, Error: 'Invalid token' })
   }
 })
@@ -225,6 +268,7 @@ router.post('/jwt/acl', bodyParser.json(), async (req, res) => {
   const { topic } = req.body
 
   if (!token || !topic) {
+    logger.warn('[JWT ACL] Missing token or topic')
     return res.status(401).json({ Ok: false, Error: 'Missing data' })
   }
 
@@ -232,6 +276,7 @@ router.post('/jwt/acl', bodyParser.json(), async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
     if (decoded.type !== 'device') {
+      logger.warn('[JWT ACL] Invalid token type')
       return res.status(403).json({ Ok: false, Error: 'Invalid token type' })
     }
 
@@ -244,13 +289,18 @@ router.post('/jwt/acl', bodyParser.json(), async (req, res) => {
         device.last_seen = new Date()
         device.status = 'active'
         await device.save()
+        logger.info(`[JWT ACL] Access granted for device id: ${decoded.sub} on topic: ${topic}`)
+      } else {
+        logger.warn(`[JWT ACL] Device not found for id: ${decoded.sub}`)
       }
 
       return res.status(200).json({ Ok: true, Error: '' })
     }
 
+    logger.warn(`[JWT ACL] Unauthorized topic access for device id: ${decoded.sub} on topic: ${topic}`)
     return res.status(403).json({ Ok: false, Error: 'Unauthorized topic' })
   } catch (err) {
+    logger.error(`[JWT ACL ERROR] ${err.message}`, { stack: err.stack })
     return res.status(403).json({ Ok: false, Error: 'Invalid token' })
   }
 })
