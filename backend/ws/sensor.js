@@ -1,6 +1,18 @@
-
 const WebSocket = require('ws')
 const { getSensorData } = require('../services/influxService')
+const jwt = require('jsonwebtoken')  // Import de jsonwebtoken pour valider le JWT
+
+// Fonction de validation du token JWT
+function authenticateJWT(token) {
+  try {
+    // Vérification du token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    return decoded
+  } catch (err) {
+    console.error("❌ Token invalide ou expiré", err)
+    return null
+  }
+}
 
 module.exports = (server) => {
   const wss = new WebSocket.Server({ server, path: '/ws/sensor' })
@@ -8,16 +20,36 @@ module.exports = (server) => {
   console.log("✅ WebSocket server ready")
 
   wss.on('connection', async (ws, req) => {
-    // Récupère le device_id depuis les query parameters
+    // Récupère les paramètres de la requête (device_id et token)
     const urlParams = new URLSearchParams(req.url.split('?')[1])
     const deviceId = urlParams.get('device_id')
+    const token = urlParams.get('token') // On suppose que le token est passé dans l'URL sous forme de query string
 
-    if (!deviceId) {
-      console.error("❌ Aucun device_id fourni")
-      ws.send(JSON.stringify({ error: "Aucun device_id fourni" }))
+    if (!deviceId || !token) {
+      console.error("❌ Aucun device_id ou token fourni")
+      ws.send(JSON.stringify({ error: "Aucun device_id ou token fourni" }))
       ws.close()
       return
     }
+
+    // Vérification du JWT
+    const decoded = authenticateJWT(token)
+    if (!decoded) {
+      console.error("❌ Token invalide ou expiré")
+      ws.send(JSON.stringify({ error: "Token invalide ou expiré" }))
+      ws.close()
+      return
+    }
+
+    // Vérification que l'utilisateur est bien admin
+    if (decoded.type !== 'admin') {
+      console.error("❌ Accès refusé, seul un admin peut accéder au WebSocket")
+      ws.send(JSON.stringify({ error: "Accès refusé, seul un admin peut accéder au WebSocket" }))
+      ws.close()
+      return
+    }
+
+    console.log(`✅ Token valide pour l'utilisateur ${decoded.sub}, type : ${decoded.type}`)
 
     console.log(`✅ Client connecté : ${deviceId}`)
 
