@@ -25,7 +25,6 @@ const timeRanges = [
   { label: '1 an', value: '365d' }
 ]
 
-const sensors = ['temperature', 'humidity', 'pressure'] // À adapter selon ton cas
 
 const DeviceDetails: React.FC = () => {
   const { token } = useAuth()
@@ -35,6 +34,8 @@ const DeviceDetails: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>('15m')
   const wsRef = useRef<WebSocket | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const sensors = ['temperature', 'humidity', 'pressure']
+
 
   const loadData = async () => {
     try {

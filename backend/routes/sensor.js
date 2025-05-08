@@ -60,7 +60,7 @@ router.get('/', authenticate, async (req, res) => {
 
 /**
  * @swagger
- * /sensors/{device_id}:
+ * /sensors/sensor/{device_id}:
  *   get:
  *     summary: Liste les capteurs actifs et inactifs d’un device
  *     tags:
