@@ -225,23 +225,26 @@ function parseDuration(duration) {
   return parseInt(value) * units[unit]
 }
 
+function roundToBucket(date, intervalMs) {
+  return Math.floor(date.getTime() / intervalMs) * intervalMs
+}
+
 function fillMissingBuckets(startDate, stopDate, bucketIntervalMs, rawData) {
- 
-  const filledData = []
-  const startTime = startDate.getTime()
-  const stopTime = stopDate.getTime()
-  const bucketCount = Math.floor((stopTime - startTime) / bucketIntervalMs)
-  const dataMap = new Map()
-  rawData.forEach(item => {
-    const time = new Date(item._time).getTime()
-    dataMap.set(time, item._value)
-  })
-  for (let i = 0; i <= bucketCount; i++) {
-    const bucketTime = new Date(startTime + i * bucketIntervalMs)
-    const bucketValue = dataMap.get(bucketTime.getTime()) || null
-    filledData.push({ _time: bucketTime.toISOString(), _value: bucketValue })
+
+  const result = []
+
+  const valueByTimestamp = new Map(
+    rawData.map(item => [
+      roundToBucket(new Date(item.time), bucketIntervalMs),
+      item.value,
+    ])
+  )  
+  for (let t = startDate.getTime(); t <= stopDate.getTime(); t += bucketIntervalMs) {
+    const value = valueByTimestamp.has(t) ? valueByTimestamp.get(t) : null
+    result.push({ time: new Date(t).toISOString(), value })
   }
-  return filledData
+
+  return result
 }
 
 
