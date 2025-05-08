@@ -197,7 +197,7 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
 
     console.log(`Bucket Interval: ${bucketInterval}`)
 
-    const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval)
+    const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval, true)
 
     // Parse l'intervalle en ms
     const bucketIntervalMs = parseDuration(bucketInterval)

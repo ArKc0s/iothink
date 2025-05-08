@@ -62,13 +62,13 @@ async function getSensorsStatus(device_id, thresholdMinutes = 0.25) {
   return { active, inactive }
 }
 
-async function getSensorData(device_id, sensor_name, start, stop, bucketInterval) {
+async function getSensorData(device_id, sensor_name, start, stop, bucketInterval, createEmpty = false) {
     const query = `
       from(bucket: "${bucket}")
         |> range(start: ${start}, stop: ${stop})
         |> filter(fn: (r) => r["topic"] == "pico/${device_id}")
         |> filter(fn: (r) => r["_field"] == "${sensor_name}")
-        |> aggregateWindow(every: ${bucketInterval}, fn: mean, createEmpty: false)
+        |> aggregateWindow(every: ${bucketInterval}, fn: mean, createEmpty: ${createEmpty})
         |> keep(columns: ["_time", "_value"])
         |> sort(columns: ["_time"])
     `
