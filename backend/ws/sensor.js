@@ -4,6 +4,8 @@ const { getSensorsStatus, getSensorData } = require('../services/influxService')
 module.exports = (server) => {
   const wss = new WebSocket.Server({ server, path: '/ws/sensor' })
 
+  console.log('🔄 WebSocket pour les capteurs actif sur /ws/sensor')
+
   wss.on('connection', async (ws, req) => {
     const deviceId = req.url.split('/').pop()
     console.log(`✅ Client connecté : ${deviceId}`)
