@@ -18,14 +18,14 @@ const {updateInactiveDevices} = require('./services/deviceMaintenanceService');
 const app = express();
 const port = 3000;
 
-const server = https.createServer(app)
-const sensorWs = require('./ws/sensor')
-
 // Certificats
 const options = {
   key: fs.readFileSync('/certs/backend.key'),
   cert: fs.readFileSync('/certs/backend.crt')
 };
+
+const server = https.createServer(options, app)
+const sensorWs = require('./ws/sensor')
 
 const corsOptions = {
   origin: ["http://localhost:3000", "http://localhost:4200", "https://localhost:5173"], 
@@ -73,6 +73,6 @@ setInterval(() => {
 
 sensorWs(server)
 
-https.createServer(options, app).listen(port, () => {
+server.listen(port, () => {
   console.log(`✅ Secure backend running at https://localhost:${port}`);
 });
