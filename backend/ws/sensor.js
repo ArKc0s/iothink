@@ -21,6 +21,8 @@ module.exports = (server) => {
       // Vérifier si protocols est un tableau ou un objet similaire
       let token = null
 
+      console.log("Protocols:", protocols)
+
       if (Array.isArray(protocols)) {
         // On cherche le protocole 'access_token' dans le tableau
         for (const protocol of protocols) {
