@@ -35,7 +35,11 @@ const server = https.createServer(options, app);
 const sensorWs = require('./ws/sensor');
 
 // Logtail setup
-const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN);
+const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN,
+  {
+    endpoint: 'https://' + process.env.LOGTAIL_INGESTING_HOST,
+  }
+);
 
 // CORS configuration
 const corsOptions = {
