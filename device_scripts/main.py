@@ -10,8 +10,8 @@ import gc
 
 MQTT_PORT = 8883
 MQTT_SSL_PARAMS = {"server_hostname": config.mqtt_host}
-MQTT_CLIENT_ID = b"rpi-pico-001"
-TOPIC = "pico/rpi-pico-001"
+MQTT_CLIENT_ID = b"rpi-pico-002"
+TOPIC = "pico/rpi-pico-002"
 
 adc = ADC(Pin(26))
 jwt = None
@@ -50,9 +50,7 @@ def connect_mqtt(token):
         ssl=True,
         ssl_params=MQTT_SSL_PARAMS
     )
-    if not client.connect(clean_session=False):  # Assure une session persistante
-        print("Nouvelle session étant configurée")
-        client.subscribe(b"pico/rpi-pico-001")  # Abonnement au topic nécessaire
+    client.connect()  # Assure une session persistante
     print("MQTT connecté")
     return client
 
@@ -91,7 +89,7 @@ try:
         mqtt_client.check_msg()
 
         gc.collect()
-        sleep(10)
+        sleep(5)
 
 except Exception as e:
     print("Erreur fatale :", e)

@@ -7,7 +7,7 @@ import time
 import config
 import gc
 
-DEVICE_ID = "rpi-pico-001"
+DEVICE_ID = "rpi-pico-002"
 CRED_FILE = "/device_credentials.json"
 
 def get_mac():
@@ -100,4 +100,3 @@ def refresh_token():
         print("Erreur refresh token :", e)
     gc.collect()
     return None
-
