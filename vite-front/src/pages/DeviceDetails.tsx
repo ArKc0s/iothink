@@ -68,6 +68,8 @@ const DeviceDetails: React.FC = () => {
         const message = JSON.parse(event.data)
         const { sensor, value, timestamp } = message
 
+        console.log("Message WebSocket reçu", message)
+
         setLatestData(prev => ({
           ...prev,
           [sensor]: { timestamp, value }
