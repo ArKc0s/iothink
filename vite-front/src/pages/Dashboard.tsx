@@ -5,11 +5,13 @@ import { ReloadOutlined, CloudOutlined, ApiOutlined, WifiOutlined } from '@ant-d
 import { useAuth } from '../context/AuthContext'
 import { useDevices } from '../hooks/useDevices'
 import { useDeviceStats } from '../hooks/useDevicesStats'
+import { useSensorsStats } from '../hooks/useSensorsStats'
 
 const Dashboard: React.FC = () => {
   const { token } = useAuth()
   const { deviceList, loading: devicesLoading, error: devicesError, loadDevices } = useDevices(token)
-  const { stats, loading: statsLoading, error: statsError, loadStats } = useDeviceStats(token)
+  const { stats: devicesStats, loading: statsLoading, error: statsError, loadStats: loadDevicesStats } = useDeviceStats(token)
+  const { stats: sensorsStats, loading: sensorStatsLoading, error: sensorStatsError, loadStats: loadSensorsStats } = useSensorsStats(token)
 
   // Dimensions fixes pour éviter le "layout shift"
   const cardStyle = {
@@ -27,7 +29,8 @@ const Dashboard: React.FC = () => {
             key="refresh"
             onClick={() => {
               loadDevices()
-              loadStats()
+              loadDevicesStats()
+              loadSensorsStats()
             }}
           />
         ]}
@@ -36,7 +39,7 @@ const Dashboard: React.FC = () => {
 
       {/* Statistiques globales */}
       <Row gutter={[16, 16]}>
-        {statsLoading ? (
+        {statsLoading || sensorStatsLoading ? (
           [0, 1, 2, 3].map((_, index) => (
             <Col xs={24} sm={12} md={6} key={index}>
               <Card style={cardStyle}>
@@ -44,35 +47,35 @@ const Dashboard: React.FC = () => {
               </Card>
             </Col>
           ))
-        ) : statsError ? (
+        ) : statsError || sensorStatsError ? (
           <Col span={24}>
             <Card style={{ textAlign: 'center' }}>
               <Empty description="Erreur lors du chargement des statistiques" />
-              <Button type="primary" onClick={() => loadStats()} icon={<ReloadOutlined />} style={{ marginTop: '16px' }}>
+              <Button type="primary" onClick={() => {loadDevicesStats(); loadSensorsStats()}} icon={<ReloadOutlined />} style={{ marginTop: '16px' }}>
                 Réessayer
               </Button>
             </Card>
           </Col>
-        ) : stats ? (
+        ) : devicesStats && sensorsStats ? (
           <>
             <Col xs={24} sm={12} md={6}>
               <Card style={cardStyle}>
-                <Statistic title="Nombre de hubs IoT" value={stats.totalDevices} prefix={<ApiOutlined />} />
+                <Statistic title="Nombre de hubs IoT" value={devicesStats.totalDevices} prefix={<ApiOutlined />} />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Card style={cardStyle}>
-                <Statistic title="Hubs hors ligne" value={stats.inactiveDevices} prefix={<CloudOutlined style={{ color: '#ff4d4f' }} />} />
+                <Statistic title="Hubs hors ligne" value={devicesStats.inactiveDevices} prefix={<CloudOutlined style={{ color: '#ff4d4f' }} />} />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Card style={cardStyle}>
-                <Statistic title="Capteurs actifs" value={stats.onlineDevices} prefix={<WifiOutlined />} />
+                <Statistic title="Capteurs actifs" value={sensorsStats.activeSensors} prefix={<WifiOutlined />} />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Card style={cardStyle}>
-                <Statistic title="Capteurs inactifs" value={stats.offlineDevices} prefix={<WifiOutlined style={{ color: '#ff4d4f' }} />} />
+                <Statistic title="Capteurs inactifs" value={sensorsStats.inactiveSensors} prefix={<WifiOutlined style={{ color: '#ff4d4f' }} />} />
               </Card>
             </Col>
           </>

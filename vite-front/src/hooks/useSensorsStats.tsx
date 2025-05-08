@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchDeviceStats } from '../services/deviceService'
-import type { DevicesStats } from '../types/DevicesStats'
+import type { SensorsStats } from '../types/SensorsStats'
+import { fetchSensorsStats } from '../services/sensorService'
 
-export const useDeviceStats = (token: string | null | undefined) => {
-  const [stats, setStats] = useState<DevicesStats | null>(null)
+export const useSensorsStats = (token: string | null | undefined) => {
+  const [stats, setStats] = useState<SensorsStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -13,9 +13,8 @@ export const useDeviceStats = (token: string | null | undefined) => {
 
     try {
       if (typeof token === 'string') {
-        const devices = await fetchDeviceStats(token)
-        console.log(token)
-        setStats(devices)
+        const sensors = await fetchSensorsStats(token)
+        setStats(sensors)
       } else {
         throw new Error('Invalid token')
       }
