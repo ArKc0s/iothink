@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 import type { SensorsStats } from '../types/SensorsStats';
 import type { SensorsResponse } from '../types/Sensor';
+import type { SensorDataPoint } from '../types/SensorDataPoint';
 
 export const fetchSensors = async (token: string): Promise<SensorsResponse> => {
     try {
@@ -25,3 +26,42 @@ export const fetchSensorsStats = async (token: string): Promise<SensorsStats> =>
         throw error;
     }
 };
+
+export const fetchSensorData = async (
+    token: string | null | undefined,
+    deviceId: string,
+    sensorName: string,
+    range: string,
+    density: number = 1
+  ): Promise<SensorDataPoint[]> => {
+    const now = new Date().toISOString()
+    const start = range === 'now()' ? now : `-${range}`
+  
+    if (!token) {
+      throw new Error('Token is required to fetch sensor data')
+    }
+  
+    const res = await apiClient.get(`/sensors/data/${deviceId}/${sensorName}`, {
+      params: {
+        start,
+        stop: 'now()',
+      },
+      headers: { Authorization: `Bearer ${token}` },
+    })
+  
+    console.log('Sensor data response:', res.data)
+  
+    // Correction du format des données
+    return res.data.data.map((entry: any) => ({
+      timestamp: new Date(entry.time).toLocaleString('fr-FR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }),
+      value: entry.value,
+      sensor: sensorName,
+    }))
+  }
