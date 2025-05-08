@@ -2,6 +2,7 @@ const WebSocket = require('ws')
 const { getSensorData } = require('../services/influxService')
 const jwt = require('jsonwebtoken')
 
+// Fonction pour authentifier le token JWT
 function authenticateJWT(token) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -17,12 +18,15 @@ module.exports = (server) => {
     server,
     path: '/ws/sensor',
     handleProtocols: (protocols, request) => {
-      const token = request.headers['authorization']?.split(' ')[1]
+      // Récupère le token depuis le protocole (passé par le client)
+      const token = protocols.find(protocol => protocol.startsWith('access_token=')).split('=')[1]
+
       if (!token) {
-        console.error("❌ Token manquant dans les en-têtes")
+        console.error("❌ Token manquant dans les protocoles")
         return false // Rejet de la connexion WebSocket si le token est manquant
       }
 
+      // Vérification du token JWT
       const decoded = authenticateJWT(token)
       if (!decoded) {
         console.error("❌ Token invalide ou expiré")
@@ -30,12 +34,13 @@ module.exports = (server) => {
       }
 
       // Si le token est valide, on autorise la connexion et on retourne le protocole
-      return protocols[0]
+      return protocols[0] // Retourne le premier protocole (valide)
     }
   })
 
   console.log("✅ WebSocket server ready")
 
+  // Gestion de la connexion WebSocket
   wss.on('connection', async (ws, req) => {
     const urlParams = new URLSearchParams(req.url.split('?')[1])
     const deviceId = urlParams.get('device_id')
@@ -73,11 +78,13 @@ module.exports = (server) => {
       }
     }, 1000)
 
+    // Fermeture de la connexion WebSocket
     ws.on('close', () => {
       clearInterval(intervalId)
       console.log(`❌ Client déconnecté : ${deviceId}`)
     })
 
+    // Gestion des erreurs WebSocket
     ws.on('error', (err) => {
       console.error(`⚠️ Erreur WebSocket : ${err.message}`)
     })

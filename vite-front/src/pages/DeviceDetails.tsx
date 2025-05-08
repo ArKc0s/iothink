@@ -67,7 +67,7 @@ const DeviceDetails: React.FC = () => {
   
     const connectWebSocket = () => {
       // Utilise l'en-tête Sec-WebSocket-Protocol pour passer le token
-      const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor?device_id=${deviceId}`, `Bearer ${token}`)
+      const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/sensor?device_id=${deviceId}`, ["access_token", token])
   
       ws.onopen = () => {
         console.log("WebSocket ouvert")
