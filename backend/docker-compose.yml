@@ -5,7 +5,6 @@ services:
     command: sh -c "node init/seed.js && npm start"
     ports:
       - "3000:3000"
-      - "3001:3001"
     depends_on:
       - mongo
     environment:
@@ -18,6 +17,7 @@ services:
       - INFLUX_BUCKET=${INFLUX_BUCKET}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - MONGO_URI=${MONGO_URI}
+      - LOGTAIL_SOURCE_TOKEN=${LOGTAIL_SOURCE_TOKEN}
     volumes:
       - ./certs:/certs:ro
     networks:
