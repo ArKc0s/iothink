@@ -8,7 +8,7 @@ const bucket = process.env.INFLUX_BUCKET
 const client = new InfluxDB({ url, token })
 const queryApi = client.getQueryApi(org)
 
-async function getSensorsStatus(device_id, thresholdMinutes = 1) {
+async function getSensorsStatus(device_id, thresholdMinutes = 0.25) {
   const cutoff = new Date(Date.now() - thresholdMinutes * 60_000).toISOString()
 
   const listFieldsQuery = `
