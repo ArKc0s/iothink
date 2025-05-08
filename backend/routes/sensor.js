@@ -229,23 +229,41 @@ function roundToBucket(date, intervalMs) {
   return Math.floor(date.getTime() / intervalMs) * intervalMs
 }
 
-function fillMissingBuckets(startDate, stopDate, bucketIntervalMs, rawData) {
+function fillMissingBuckets(rawData, bucketIntervalMs) {
+  if (!rawData.length) return []
 
-  const result = []
+  const result = [rawData[0]]
+  for (let i = 1; i < rawData.length; i++) {
+    const prevTime = new Date(rawData[i - 1].time).getTime()
+    const currTime = new Date(rawData[i].time).getTime()
+    const gap = currTime - prevTime
 
-  const valueByTimestamp = new Map(
-    rawData.map(item => [
-      roundToBucket(new Date(item.time), bucketIntervalMs),
-      item.value,
-    ])
-  )  
-  for (let t = startDate.getTime(); t <= stopDate.getTime(); t += bucketIntervalMs) {
-    const value = valueByTimestamp.has(t) ? valueByTimestamp.get(t) : null
-    result.push({ time: new Date(t).toISOString(), value })
+    if (gap > bucketIntervalMs) {
+      const missingPoints = Math.floor(gap / bucketIntervalMs) - 1
+      for (let j = 1; j <= missingPoints; j++) {
+        result.push({
+          time: new Date(prevTime + j * bucketIntervalMs).toISOString(),
+          value: null
+        })
+      }
+    }
+
+    result.push(rawData[i])
+  }
+
+  // Vérifie s’il faut en ajouter un à la fin par rapport à "now"
+  const lastTime = new Date(result[result.length - 1].time).getTime()
+  const now = Date.now()
+  if (now - lastTime > bucketIntervalMs) {
+    result.push({
+      time: new Date(lastTime + bucketIntervalMs).toISOString(),
+      value: null
+    })
   }
 
   return result
 }
+
 
 
 
