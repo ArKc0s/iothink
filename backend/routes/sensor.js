@@ -205,6 +205,20 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
   }
 })
 
+function parseDuration(duration) {
+  const units = {
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000
+  }
+
+  const match = duration.match(/(-?\d+)([smhd])/)
+  if (!match) return 0
+
+  const [, value, unit] = match
+  return parseInt(value) * units[unit]
+}
 
 
 /**
