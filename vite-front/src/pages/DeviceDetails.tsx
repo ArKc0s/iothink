@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react'
-import { Card, Space, Select, Typography } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
+import { Card, Space, Select, Row, Col, Empty } from 'antd'
 import { useParams } from 'react-router-dom'
 import { fetchSensorData } from '../services/sensorService'
 import { useAuth } from '../context/AuthContext'
+import { ReloadOutlined } from '@ant-design/icons'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import type { SensorDataPoint } from '../types/SensorDataPoint'
+import { PageHeader } from '@ant-design/pro-layout'
 
 const { Option } = Select
-const { Title: AntTitle } = Typography
 
 const timeRanges = [
   { label: '5 minutes', value: '5m' },
@@ -20,62 +21,132 @@ const timeRanges = [
   { label: '1 an', value: '365d' }
 ]
 
+const sensors = ['temperature', 'humidity', 'pressure'] // Remplace par tes capteurs réels
+
 const DeviceDetails: React.FC = () => {
   const { token } = useAuth()
   const { deviceId } = useParams<{ deviceId: string }>()
   const [sensorData, setSensorData] = useState<{ [sensorId: string]: SensorDataPoint[] }>({})
+  const [latestData, setLatestData] = useState<{ [sensorId: string]: SensorDataPoint }>({})
   const [timeRange, setTimeRange] = useState<string>('15m')
+  const wsRef = useRef<WebSocket | null>(null)
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const sensorNames = ['temperature', 'humidity', 'pressure'] // Remplace par tes capteurs réels
-        const data: { [sensorId: string]: SensorDataPoint[] } = {}
+  // Récupération des données historiques
+  const loadData = async () => {
+    try {
+      const data: { [sensorId: string]: SensorDataPoint[] } = {}
 
-        for (const sensorName of sensorNames) {
-          const points = await fetchSensorData(token, deviceId!, sensorName, timeRange)
-          data[sensorName] = points
+      for (const sensorName of sensors) {
+        const points = await fetchSensorData(token, deviceId!, sensorName, timeRange)
+        data[sensorName] = points
+
+        // Mise à jour de la dernière valeur connue
+        if (points.length > 0) {
+          setLatestData(prev => ({
+            ...prev,
+            [sensorName]: points[points.length - 1]
+          }))
         }
+      }
 
-        setSensorData(data)
+      setSensorData(data)
+    } catch (error) {
+      console.error('Erreur lors du chargement des données des capteurs', error)
+    }
+  }
+
+  // Connexion WebSocket pour les mises à jour en temps réel
+  useEffect(() => {
+    if (!deviceId) return
+
+    const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_WSS_URL}/ws/${deviceId}`)
+    wsRef.current = ws
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data)
+        const { sensor, value, timestamp } = message
+
+        setLatestData(prev => ({
+          ...prev,
+          [sensor]: { timestamp, value }
+        }))
       } catch (error) {
-        console.error('Erreur lors du chargement des données des capteurs', error)
+        console.error("Erreur de parsing des données WebSocket", error)
       }
     }
 
+    ws.onclose = () => console.log("WebSocket fermé")
+    ws.onerror = (error) => console.error("Erreur WebSocket", error)
+
+    return () => ws.close()
+  }, [deviceId])
+
+  useEffect(() => {
     loadData()
   }, [deviceId, timeRange, token])
 
   return (
-    <div style={{ padding: '20px' }}>
-      <AntTitle level={2}>{deviceId}</AntTitle>
+    <div>
+      <PageHeader
+        title="Données du hub"
+        subTitle={deviceId}
+        extra={[
+          <Space key="controls">
+            <Select defaultValue={timeRange} onChange={setTimeRange}>
+              {timeRanges.map(range => (
+                <Option key={range.value} value={range.value}>
+                  {range.label}
+                </Option>
+              ))}
+            </Select>
+            <ReloadOutlined key="refresh" onClick={loadData} />
+          </Space>
+        ]}
+        style={{ paddingLeft: 0 }}
+      />
 
-      {/* Sélecteur de plage de temps */}
-      <Space style={{ marginBottom: '16px' }}>
-        <Select defaultValue={timeRange} onChange={setTimeRange}>
-          {timeRanges.map(range => (
-            <Option key={range.value} value={range.value}>
-              {range.label}
-            </Option>
-          ))}
-        </Select>
-      </Space>
+      {/* Cards avec les dernières valeurs connues */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 16 }}>
+        {sensors.map(sensorId => (
+          <Col key={sensorId} xs={24} sm={12} md={12} lg={6} xl={6}>
+            <Card title={sensorId} bordered={false} style={{ height: 150 }}>
+              {latestData[sensorId] ? (
+                <div>
+                  <p>Dernière valeur : {latestData[sensorId].value}</p>
+                  <p>À : {new Date(latestData[sensorId].timestamp).toLocaleString()}</p>
+                </div>
+              ) : (
+                <Empty description="Aucune donnée disponible" />
+              )}
+            </Card>
+          </Col>
+        ))}
+      </Row>
 
-      {/* Graphiques */}
-      {Object.keys(sensorData).map(sensorId => (
-        <Card key={sensorId} title={sensorId} bordered={false} style={{ marginBottom: '24px' }}>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={sensorData[sensorId]}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="value" name={sensorId} stroke="#1890ff" dot={{ r: 2 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-      ))}
+      {/* Grille des graphiques */}
+      <Row gutter={[24, 24]}>
+        {sensors.map(sensorId => (
+          <Col key={sensorId} xs={24} sm={24} md={12} lg={12} xl={12}>
+            <Card title={sensorId} bordered={false} style={{ height: 350 }}>
+              {sensorData[sensorId] && sensorData[sensorId].length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={sensorData[sensorId]}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="timestamp" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="value" name={sensorId} stroke="#1890ff" dot={{ r: 2 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <Empty description="Aucune donnée pour cette période" />
+              )}
+            </Card>
+          </Col>
+        ))}
+      </Row>
     </div>
   )
 }

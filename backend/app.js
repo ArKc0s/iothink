@@ -15,6 +15,9 @@ const authRoutes = require('./routes/auth');
 const setupSwagger = require('./swagger');
 const {updateInactiveDevices} = require('./services/deviceMaintenanceService');
 
+const server = https.createServer(app)
+const sensorWs = require('./ws/sensor')
+
 const app = express();
 const port = 3000;
 
@@ -67,6 +70,8 @@ app.use('/', express.json(), authRoutes);
 setInterval(() => {
   updateInactiveDevices(0.25);
 }, 5 * 1000);
+
+sensorWs(server)
 
 https.createServer(options, app).listen(port, () => {
   console.log(`✅ Secure backend running at https://localhost:${port}`);
