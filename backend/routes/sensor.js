@@ -179,21 +179,23 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
   }
 
   try {
-    // Calcul automatique de la densité en fonction de la plage de temps
-    const startDate = new Date(start === '-1h' ? Date.now() - 3600 * 1000 : Date.parse(start))
-    const stopDate = new Date(stop === 'now()' ? Date.now() : Date.parse(stop))
-    const duration = (stopDate - startDate) / 1000 // durée en secondes
+    // Calcul de la durée totale en secondes
+    const now = new Date()
+    const startDate = start.includes('-')
+      ? new Date(now.getTime() + parseDuration(start))
+      : new Date(Date.parse(start))
+    const stopDate = stop === 'now()' ? now : new Date(Date.parse(stop))
+    const durationInSeconds = (stopDate - startDate) / 1000
 
-    // Définir la densité en fonction de la durée
-    let bucketInterval = '10s' // Intervalle par défaut
+    // Définition dynamique du bucket interval
+    let bucketInterval = '10s'
+    if (durationInSeconds > 60 * 60) bucketInterval = '1m'   // Plus d'une heure
+    if (durationInSeconds > 24 * 60 * 60) bucketInterval = '15m'  // Plus d'un jour
+    if (durationInSeconds > 7 * 24 * 60 * 60) bucketInterval = '1h'  // Plus d'une semaine
+    if (durationInSeconds > 30 * 24 * 60 * 60) bucketInterval = '1d'  // Plus d'un mois
+    if (durationInSeconds > 365 * 24 * 60 * 60) bucketInterval = '7d' // Plus d'un an
 
-    if (duration > 60 * 60) bucketInterval = '1m'  // Plus d'une heure
-    if (duration > 24 * 60 * 60) bucketInterval = '15m' // Plus d'un jour
-    if (duration > 7 * 24 * 60 * 60) bucketInterval = '1h'  // Plus d'une semaine
-    if (duration > 30 * 24 * 60 * 60) bucketInterval = '1d'  // Plus d'un mois
-    if (duration > 365 * 24 * 60 * 60) bucketInterval = '7d' // Plus d'un an
-
-    console.log('Bucket Interval:', bucketInterval)
+    console.log(`Bucket Interval: ${bucketInterval}`)
 
     const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval)
     return res.json({ sensor: sensor_name, data })
@@ -202,6 +204,7 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
     return res.status(500).json({ error: 'Failed to query sensor data' })
   }
 })
+
 
 
 /**
