@@ -226,18 +226,22 @@ function parseDuration(duration) {
 }
 
 function fillMissingBuckets(startDate, stopDate, bucketIntervalMs, rawData) {
-  const result = []
-  const timestamps = new Set(rawData.map(item => new Date(item.time).getTime()))
-  
-  for (let t = startDate.getTime(); t <= stopDate.getTime(); t += bucketIntervalMs) {
-    if (timestamps.has(t)) {
-      result.push(rawData.find(item => new Date(item.time).getTime() === t))
-    } else {
-      result.push({ time: new Date(t).toISOString(), value: null })
-    }
+ 
+  const filledData = []
+  const startTime = startDate.getTime()
+  const stopTime = stopDate.getTime()
+  const bucketCount = Math.floor((stopTime - startTime) / bucketIntervalMs)
+  const dataMap = new Map()
+  rawData.forEach(item => {
+    const time = new Date(item._time).getTime()
+    dataMap.set(time, item._value)
+  })
+  for (let i = 0; i <= bucketCount; i++) {
+    const bucketTime = new Date(startTime + i * bucketIntervalMs)
+    const bucketValue = dataMap.get(bucketTime.getTime()) || null
+    filledData.push({ _time: bucketTime.toISOString(), _value: bucketValue })
   }
-
-  return result
+  return filledData
 }
 
 
