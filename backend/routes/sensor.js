@@ -197,11 +197,11 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
 
     console.log(`Bucket Interval: ${bucketInterval}`)
 
-    // Récupérer les données depuis la fonction getSensorData
     const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval)
 
-    // Si les données sont récupérées, on va remplir les intervalles manquants avec des valeurs nulles
-    const filledData = fillMissingData(data, startDate, stopDate, bucketInterval)
+    // Parse l'intervalle en ms
+    const bucketIntervalMs = parseDuration(bucketInterval)
+    const filledData = fillMissingBuckets(startDate, stopDate, bucketIntervalMs, data)
 
     return res.json({ sensor: sensor_name, data: filledData })
   } catch (err) {
@@ -209,54 +209,6 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
     return res.status(500).json({ error: 'Failed to query sensor data' })
   }
 })
-
-// Fonction pour insérer les valeurs nulles dans les intervalles manquants
-function fillMissingData(data, startDate, stopDate, bucketInterval) {
-  const filledData = []
-  const intervalMs = getIntervalInMilliseconds(bucketInterval)
-
-  let currentTime = startDate
-  let dataIndex = 0
-
-  while (currentTime <= stopDate) {
-    const currentTimeStr = currentTime.toISOString()
-
-    // Vérifier si la donnée existe à ce timestamp
-    if (dataIndex < data.length && new Date(data[dataIndex].timestamp).getTime() === currentTime.getTime()) {
-      filledData.push(data[dataIndex])
-      dataIndex++
-    } else {
-      // Ajouter une valeur null pour l'intervalle manquant
-      filledData.push({ timestamp: currentTimeStr, value: null })
-    }
-
-    // Avancer au prochain intervalle
-    currentTime = new Date(currentTime.getTime() + intervalMs)
-  }
-
-  // Vérification et nettoyage des dates invalides
-  filledData.forEach(entry => {
-    if (isNaN(new Date(entry.timestamp).getTime())) {
-      console.warn('Invalid date detected, fixing entry:', entry)
-      entry.timestamp = null  // Ou une date de remplacement comme 'Invalid Date'
-    }
-  })
-
-  return filledData
-}
-
-// Fonction pour convertir les intervalles en millisecondes
-function getIntervalInMilliseconds(bucketInterval) {
-  const intervals = {
-    '10s': 10000,
-    '1m': 60000,
-    '15m': 900000,
-    '1h': 3600000,
-    '1d': 86400000,
-    '7d': 604800000
-  }
-  return intervals[bucketInterval] || 10000 // Par défaut, 10s
-}
 
 function parseDuration(duration) {
   const units = {
@@ -272,6 +224,22 @@ function parseDuration(duration) {
   const [, value, unit] = match
   return parseInt(value) * units[unit]
 }
+
+function fillMissingBuckets(startDate, stopDate, bucketIntervalMs, rawData) {
+  const result = []
+  const timestamps = new Set(rawData.map(item => new Date(item.time).getTime()))
+  
+  for (let t = startDate.getTime(); t <= stopDate.getTime(); t += bucketIntervalMs) {
+    if (timestamps.has(t)) {
+      result.push(rawData.find(item => new Date(item.time).getTime() === t))
+    } else {
+      result.push({ time: new Date(t).toISOString(), value: null })
+    }
+  }
+
+  return result
+}
+
 
 
 /**
