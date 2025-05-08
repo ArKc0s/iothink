@@ -199,11 +199,7 @@ router.get('/data/:device_id/:sensor_name', authenticate, async (req, res) => {
 
     const data = await getSensorData(device_id, sensor_name, start, stop, bucketInterval, true)
 
-    // Parse l'intervalle en ms
-    const bucketIntervalMs = parseDuration(bucketInterval)
-    const filledData = fillMissingBuckets(startDate, stopDate, bucketIntervalMs, data)
-
-    return res.json({ sensor: sensor_name, data: filledData })
+    return res.json({ sensor: sensor_name, data: data })
   } catch (err) {
     console.error('[Influx Error]', err)
     return res.status(500).json({ error: 'Failed to query sensor data' })
