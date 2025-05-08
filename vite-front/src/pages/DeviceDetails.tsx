@@ -48,7 +48,7 @@ const DeviceDetails: React.FC = () => {
   useEffect(() => {
     loadData()
     if (intervalRef.current) clearInterval(intervalRef.current)
-    intervalRef.current = setInterval(loadData, 30) // Mise à jour toutes les 30 secondes
+    intervalRef.current = setInterval(loadData, 5000) // Mise à jour toutes les 30 secondes
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
@@ -68,8 +68,6 @@ const DeviceDetails: React.FC = () => {
         try {
           const message = JSON.parse(event.data)
           const { sensor, value, timestamp } = message
-
-          console.log("Message WebSocket reçu", message)
 
           setLatestData(prev => ({
             ...prev,

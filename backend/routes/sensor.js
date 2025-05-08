@@ -225,45 +225,6 @@ function parseDuration(duration) {
   return parseInt(value) * units[unit]
 }
 
-function roundToBucket(date, intervalMs) {
-  return Math.floor(date.getTime() / intervalMs) * intervalMs
-}
-
-function fillMissingBuckets(rawData, bucketIntervalMs) {
-  if (!rawData.length) return []
-
-  const result = [rawData[0]]
-  for (let i = 1; i < rawData.length; i++) {
-    const prevTime = new Date(rawData[i - 1].time).getTime()
-    const currTime = new Date(rawData[i].time).getTime()
-    const gap = currTime - prevTime
-
-    if (gap > bucketIntervalMs) {
-      const missingPoints = Math.floor(gap / bucketIntervalMs) - 1
-      for (let j = 1; j <= missingPoints; j++) {
-        result.push({
-          time: new Date(prevTime + j * bucketIntervalMs).toISOString(),
-          value: null
-        })
-      }
-    }
-
-    result.push(rawData[i])
-  }
-
-  // Vérifie s’il faut en ajouter un à la fin par rapport à "now"
-  const lastTime = new Date(result[result.length - 1].time).getTime()
-  const now = Date.now()
-  if (now - lastTime > bucketIntervalMs) {
-    result.push({
-      time: new Date(lastTime + bucketIntervalMs).toISOString(),
-      value: null
-    })
-  }
-
-  return result
-}
-
 
 
 
