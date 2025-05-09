@@ -10,4 +10,4 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - ../certs:/app/certs:ro
+      - ./certs:/certs:ro
