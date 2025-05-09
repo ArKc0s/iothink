@@ -9,7 +9,7 @@ RUN npm install
 RUN npm i -g serve
 
 COPY ./vite-front ./
-COPY ../certs ./certs
+COPY ./certs ./certs
 
 RUN npm run build
 
