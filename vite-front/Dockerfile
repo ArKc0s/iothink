@@ -2,19 +2,17 @@ FROM node:18
 
 WORKDIR /app
 
-COPY package.json .
-
+COPY vite-front/package.json .
 RUN npm install
-
 RUN npm i -g serve
 
-COPY . .
+# Copie des sources
+COPY vite-front/ .
 
-# Copie des certificats
-COPY ../certs /app/certs
+# Vérification des certificats
+RUN ls -la /app/certs || (echo "❌ Certs directory not found" && exit 1)
 
 RUN npm run build
 
 EXPOSE 5173
-
-CMD [ "serve", "-s", "dist" ]
+CMD ["serve", "-s", "dist"]
