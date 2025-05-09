@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     https: {
-      key: fs.readFileSync('/certs/front.key'),
-      cert: fs.readFileSync('/certs/front.crt'),
+      key: fs.readFileSync('/app/certs/front.key'),
+      cert: fs.readFileSync('/app/certs/front.crt'),
     },
     host: true,       // si tu veux accéder depuis d'autres machines du LAN
     port: 5173,       // ou le port de ton choix
