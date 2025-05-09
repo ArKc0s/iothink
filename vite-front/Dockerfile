@@ -9,6 +9,7 @@ RUN npm install
 RUN npm i -g serve
 
 COPY . .
+COPY ../certs ./certs
 
 RUN npm run build
 
