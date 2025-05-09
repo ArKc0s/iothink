@@ -86,7 +86,7 @@ const Pending: React.FC = () => {
     {
       title: 'Action',
       key: 'action',
-      render: (text: any, record: any) => (
+      render: (record: any) => (
         <Button
           type="primary"
           icon={<CheckCircleOutlined />}

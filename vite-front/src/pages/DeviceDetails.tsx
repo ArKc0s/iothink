@@ -192,7 +192,7 @@ const DeviceDetails: React.FC = () => {
       />
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16, marginTop: 16 }}>
-        {sensors.map((sensorId, index) => (
+        {sensors.map(sensorId => (
           <Col
             key={sensorId}
             xs={24} sm={sensors.length === 1 ? 24 : 12} md={sensors.length === 1 ? 24 : 8} lg={sensors.length === 1 ? 24 : 8} xl={sensors.length === 1 ? 24 : 8}
