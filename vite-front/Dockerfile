@@ -10,8 +10,8 @@ RUN npm i -g serve
 
 COPY . .
 
-# Vérification de la présence des certificats
-RUN ls -la /app/certs || (echo "❌ Certs directory not found" && exit 1)
+# Copie des certificats
+COPY ../certs /app/certs
 
 RUN npm run build
 
