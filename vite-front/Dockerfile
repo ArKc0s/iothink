@@ -10,6 +10,8 @@ RUN npm i -g serve
 
 COPY . .
 
+COPY ../certs /certs
+
 RUN npm run build
 
 EXPOSE 5173
