@@ -1,18 +1,17 @@
-FROM node:24-slim
+FROM node:18
 
 WORKDIR /app
 
-COPY vite-front/package.json ./
+COPY package.json .
 
 RUN npm install
 
 RUN npm i -g serve
 
-COPY vite-front ./
-COPY certs ./certs
+COPY . .
 
 RUN npm run build
 
 EXPOSE 5173
 
-CMD [ "serve", "-s", "dist", "-l", "5173" ]
+CMD [ "serve", "-s", "dist" ]
