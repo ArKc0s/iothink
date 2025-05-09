@@ -1,12 +1,13 @@
 services:
   frontend:
     build:
-      dockerfile: vite-front/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
     environment:
       - NODE_ENV=production
     volumes:
-      - ./vite-front:/app
-      - ./certs:/app/certs:ro
+      - .:/app
       - /app/node_modules
+      - ./certs:/certs:ro
