@@ -1,0 +1,12 @@
+# InfluxDB
+DOCKER_INFLUXDB_INIT_USERNAME=
+DOCKER_INFLUXDB_INIT_PASSWORD=
+DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=
+
+# MQTT (pour MQTTS)
+MQTT_SERVER=ssl://...:8883
+MQTT_USERNAME=
+MQTT_PASSWORD=
+
+# Optionnel: URL InfluxDB (déjà défini en dur dans le docker-compose, mais configurable si besoin)
+INFLUX_URL=

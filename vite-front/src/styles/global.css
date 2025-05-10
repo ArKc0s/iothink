@@ -1,0 +1,13 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+  }
+  
+  /* src/styles/variables.css */
+  :root {
+    --primary-color: #1890ff;
+    --secondary-color: #f0f2f5;
+    --text-color: #333;
+    --border-radius: 8px;
+  }

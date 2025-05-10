@@ -27,7 +27,7 @@ services:
     restart: always
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
-      - ./ca.crt:/etc/telegraf/ca.crt:ro
+      - ./certs/ca.crt:/etc/telegraf/ca.crt:ro
     depends_on:
       - influxdb
     networks:
@@ -40,28 +40,9 @@ services:
       - MQTT_PASSWORD=${MQTT_PASSWORD}
       - MQTT_SERVER=${MQTT_SERVER}
 
-  
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    restart: always
-    ports:
-      - "3000:3000"
-    networks:
-      - iot
-    volumes:
-      - ./grafana-provisioning:/etc/grafana/provisioning
-      - grafana-data:/var/lib/grafana
-    depends_on:
-      - influxdb
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
-
 networks:
   iot:
 
 volumes:
-  grafana-data:
   influxdb-data:
   influxdb-config:
