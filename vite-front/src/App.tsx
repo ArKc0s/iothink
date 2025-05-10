@@ -23,7 +23,6 @@ function App() {
               <Route path="devices/:deviceId" element={<DeviceDetails />} />
               <Route path="devices" element={<DeviceEnrollment />} />
               <Route path="pending" element={<Pending />} />
-              <Route path="*" element={<div>Page not found</div>} />
             </Route>
           </Route>
         </Routes>
